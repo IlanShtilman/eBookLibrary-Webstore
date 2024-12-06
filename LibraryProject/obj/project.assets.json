@@ -1946,26 +1946,29 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ishti\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\mpota\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
+    "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ishti\\RiderProjects\\LibraryProject\\LibraryProject\\LibraryProject.csproj",
+      "projectUniqueName": "C:\\Users\\mpota\\RiderProjects\\LibraryProject\\LibraryProject\\LibraryProject.csproj",
       "projectName": "LibraryProject",
-      "projectPath": "C:\\Users\\ishti\\RiderProjects\\LibraryProject\\LibraryProject\\LibraryProject.csproj",
-      "packagesPath": "C:\\Users\\ishti\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ishti\\RiderProjects\\LibraryProject\\LibraryProject\\obj\\",
+      "projectPath": "C:\\Users\\mpota\\RiderProjects\\LibraryProject\\LibraryProject\\LibraryProject.csproj",
+      "packagesPath": "C:\\Users\\mpota\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\mpota\\RiderProjects\\LibraryProject\\LibraryProject\\obj\\",
       "projectStyle": "PackageReference",
       "UsingMicrosoftNETSdk": false,
       "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+        "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet"
       ],
       "configFilePaths": [
-        "C:\\Users\\ishti\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mpota\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
