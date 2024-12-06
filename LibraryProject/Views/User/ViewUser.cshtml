@@ -1,0 +1,25 @@
+@model LibraryProject.Models.User
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>View User</title>
+</head>
+<body>
+<h1>User's Profile</h1>
+<div>
+    Username: @Model.Username <br/>
+    First Name: @Model.FirstName <br/>
+    Last Name: @Model.LastName <br/>
+    Email: @Model.Email <br/>
+    Role: @Model.Role <br/>
+    Gender: @Model.Gender <br/>
+</div>
+
+<div>
+    <button>Edit Profile</button>
+    <a href="@Url.Action("ChangePassword", "User")" class="btn btn-primary">Change Password</a>
+</div>
+</body>
+</html>

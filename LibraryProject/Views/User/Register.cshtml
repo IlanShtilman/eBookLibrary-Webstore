@@ -1,0 +1,122 @@
+@model LibraryProject.Models.User
+@* <h2>Register</h2> *@
+@* *@
+@* <form action="Register" method="post"> *@
+@*     <label>Username: </label> *@
+@*     <input value="@Model.Username" name="Username"/> @Html.ValidationMessageFor(x => x.Username) <br/> *@
+@* *@
+@*     <label>Email: </label> *@
+@*     <input value="@Model.Email" name="Email"/> @Html.ValidationMessageFor(x => x.Email) <br/> *@
+@* *@
+@*     <label>First Name: </label> *@
+@*     <input value="@Model.FirstName" name="FirstName"/> @Html.ValidationMessageFor(x => x.FirstName) <br/> *@
+@* *@
+@*     <label>Last Name: </label> *@
+@*     <input value="@Model.LastName" name="LastName"/> @Html.ValidationMessageFor(x => x.LastName) <br/> *@
+@*   *@
+@*     <label>Gender: </label> *@
+@*     <select name="Gender"> *@
+@*         <option value="Male">Male</option> *@
+@*         <option value="Female">Female</option> *@
+@*         <option value="Other">Other</option> *@
+@*     </select> @Html.ValidationMessageFor(x => x.Gender) <br/> *@
+@*      *@
+@*     <label>Password: </label>  *@
+@*     <input value="@Model.Password" type="password" name="Password"/> @Html.ValidationMessageFor(x => x.Password) <br/> *@
+@*      *@
+@*     <label>Confirm Password: </label> *@
+@*     <input value="@Model.Password" type="password" name="PassConfirm"/> @Html.ValidationMessageFor(x => x.Password) <br/> *@
+@*      *@
+@*     <input value="Register" type="submit"/> *@
+@*      *@
+@* </form> *@
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+@section Styles {
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts - Heebo -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SignIn page CSS -->
+    <link rel="stylesheet" href="~/css/register.css" />
+}
+
+<div id="registration-section">
+    <div class="container">
+        <div class="registration-container">
+            <div class="registration-header">
+                <h2>Join Our Reading Community</h2>
+                <p class="registration-subtitle">Create your account to start your reading journey</p>
+            </div>
+
+            <form class="registration-form" method="post" asp-controller="User" asp-action="Register">
+                <div class="form-section">
+                    <h3>Account Information</h3>
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input value="@Model.Username" type="text" name="Username" placeholder="Username" required> @Html.ValidationMessageFor(x => x.Username)
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input value="@Model.Email" type="email" name="Email" placeholder="Email Address" required> @Html.ValidationMessageFor(x => x.Email)
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input value="@Model.Password" type="password" name="Password" placeholder="Password" required> @Html.ValidationMessageFor(x => x.Password)
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input value="@Model.Password" type="password" name="PassConfirm" placeholder="Password" required> @Html.ValidationMessageFor(x => x.Password)
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Personal Details</h3>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <i class="fas fa-user"></i>
+                            <input value="@Model.FirstName" type="text" name="FirstName" placeholder="First Name" required> @Html.ValidationMessageFor(x => x.FirstName)
+                        </div>
+                        <div class="form-group half">
+                            <i class="fas fa-user"></i>
+                            <input value="@Model.LastName" type="text" name="LastName" placeholder="Last Name" required> @Html.ValidationMessageFor(x => x.LastName)
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <i class="fas fa-venus-mars"></i>
+                            <select value="@Model.Gender" name="Gender" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select> @Html.ValidationMessageFor(x => x.Gender)
+                        </div>
+                        @*<div class="form-group half">
+                            <i class="fas fa-user-tag"></i>
+                            <select name="Role" required>
+                                <option value="" disabled selected>Select Role</option>
+                                <option value="Reader">Reader</option>
+                                <option value="Author">Author</option>
+                            </select>
+                        </div>*@
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button value="Register" type="submit" class="register-btn">Create Account</button>
+                    <p class="login-text">
+                        Already have an account? <a asp-controller="User" asp-action="Login">Sign in</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

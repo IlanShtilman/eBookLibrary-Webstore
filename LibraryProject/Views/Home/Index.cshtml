@@ -1,0 +1,271 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+@* Section of Header website *@
+<div id="header">
+    <div class="container">
+        <nav>
+            <ul id="sideMenu">
+                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                <li><a asp-controller="Project" asp-action="Index">Store</a></li>
+                <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
+                <i class="fas fa-times" onclick="closeMenu()"></i>
+            </ul>
+            <div class="nav-icons">
+                <a href="#" class="icon-link">
+                    <i class="fa-solid fa-heart"></i>
+                </a>
+                <a href="#" class="icon-link">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+            </div>
+            <div>
+                @if (ViewBag.Username != null)
+                {
+                    <p>Welcome, @ViewBag.Username!</p>
+                    <a asp-controller="User" asp-action="Logout">Logout</a>
+                }
+                else
+                {
+                    <p>You are not logged in.</p>
+                    <a asp-controller="User" asp-action="Login">Login</a>
+                }
+            </div>
+            <i class="fas fa-bars" onclick="openMenu()"></i>
+        </nav>
+    </div>
+</div>
+
+@* Section of Searching and Welcome website *@
+<div id="Search">
+    <div class="container">
+        <img src="~/images/Homepage.png" class="homephoto" alt="Description">
+        <h1>Hello There!</h1>
+        <p>Welcome to ilan's and ariel's eBook Store! our community's center for lifelong curiosity, learning and reading</p>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="What would you like to explore today?" aria-label="Search books" />
+            <button class="search-button" aria-label="Search">SEARCH</button>
+        </div>
+    </div>
+</div>
+
+@* Section of How It Works *@
+<div id="How-It-Works">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <i class="fas fa-user-plus"></i>
+                <h3>Create Account</h3>
+                <p>Sign up for free and join our reading community</p>
+            </div>
+            <div class="step-card">
+                <i class="fas fa-search"></i>
+                <h3>Browse Books</h3>
+                <p>Explore our vast collection of digital books</p>
+            </div>
+            <div class="step-card">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Choose Your Option</h3>
+                <p>Decide to purchase or borrow your selected books</p>
+            </div>
+            <div class="step-card">
+                <i class="fas fa-book-reader"></i>
+                <h3>Start Reading</h3>
+                <p>Download and enjoy your books anytime, anywhere</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* About Library *@
+<div id="About-Library">
+    <div class="container">
+        <h2 class="section-title">About Our Library</h2>
+        <div class="about-grid">
+            <div class="about-image">
+                <img src="~/images/Virtual library.jpg" alt="Virtual Library" class="about-feature-image">
+            </div>
+            <div class="about-content">
+                <div class="about-tab">
+                    <button class="tab-link active" onclick="openAboutTab(event, 'story')">
+                        <i class="fas fa-book-open"></i> Our Story
+                    </button>
+                    <button class="tab-link" onclick="openAboutTab(event, 'mission')">
+                        <i class="fas fa-bullseye"></i> Our Mission
+                    </button>
+                    <button class="tab-link" onclick="openAboutTab(event, 'special')">
+                        <i class="fas fa-star"></i> Why Choose Us
+                    </button>
+                </div>
+
+                <div id="story" class="tab-content active">
+                    <h3>Our Story</h3>
+                    <p>We started with a simple idea: make reading accessible to everyone, everywhere. Our digital library brings thousands of books right to your fingertips, creating a space where knowledge meets convenience.</p>
+                </div>
+
+                <div id="mission" class="tab-content">
+                    <h3>Our Mission</h3>
+                    <p>We believe that reading should be accessible, affordable, and enjoyable for all. Our mission is to break down barriers between people and knowledge, offering both purchase and borrowing options to suit everyone's needs.</p>
+                </div>
+
+                <div id="special" class="tab-content">
+                    <h3>Why Choose Us</h3>
+                    <p>Unlike traditional bookstores, we offer the flexibility to both buy and borrow. Our curated collection ensures quality content, while our user-friendly platform makes finding your next great read effortless.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 5 Best Seller Categories Section *@
+<div id="Best-Seller">
+    <div class="container">
+        <h2 class="section-title">Best Seller Categories</h2>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="~/images/Romance Book Cover.png" alt="Romance Books">
+                <div class="category-overlay">
+                    <h3>Romance</h3>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="~/images/Mystery Book Cover.png" alt="Mystery Books">
+                <div class="category-overlay">
+                    <h3>Mystery</h3>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="~/images/Fantasy Book Cover.png" alt="Fantasy Books">
+                <div class="category-overlay">
+                    <h3>Fantasy</h3>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="~/images/Science Fiction Book Cover.png" alt="Science Fiction Books">
+                <div class="category-overlay">
+                    <h3>Science Fiction</h3>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="~/images/Young Adult Book Cover.png" alt="Young Adult Books">
+                <div class="category-overlay">
+                    <h3>Young Adult</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Section of Reading Benefits *@
+<div id="Reading-Benefits">
+    <div class="container">
+        <h2 class="section-title">Benefits of Reading</h2>
+        <div class="benefits-container">
+            <div class="benefit-item">
+                <div class="benefit-number">01</div>
+                <div class="benefit-content">
+                    <h3>Educational Growth</h3>
+                    <ul>
+                        <li>Expands vocabulary and language skills</li>
+                        <li>Improves writing abilities</li>
+                        <li>Enhances critical thinking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-number">02</div>
+                <div class="benefit-content">
+                    <h3>Mental Wellness</h3>
+                    <ul>
+                        <li>Reduces stress and anxiety</li>
+                        <li>Improves sleep quality</li>
+                        <li>Boosts mental stimulation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-number">03</div>
+                <div class="benefit-content">
+                    <h3>Entertainment</h3>
+                    <ul>
+                        <li>Provides endless adventures</li>
+                        <li>Offers escape from daily routine</li>
+                        <li>Creates lasting memories</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-number">04</div>
+                <div class="benefit-content">
+                    <h3>Personal Growth</h3>
+                    <ul>
+                        <li>Develops empathy and understanding</li>
+                        <li>Inspires creativity</li>
+                        <li>Builds confidence</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Section of Contact website *@
+<div id="Contact">
+    <div class="container">
+        <div class="row">
+            <div class="contact-left">
+                <p class="Text-Contact">Let's Make A Connection.</p>
+                <p><i class="fas fa-envelope"></i>eBookShop@gmail.com</p>
+                <p><i class="fas fa-phone"></i>+972-556-614-199</p>
+                <div class="Social-class">
+                    <a href="https://www.facebook.com/IlanShtilman" target="_blank"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.linkedin.com/in/ilanshtilman-1is/" target="_blank"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://github.com/IlanShtilman" target="_blank"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <div class="contact-right">
+                <form id="contact-form">
+                    <input type="text" name="Name" placeholder="Your Full Name" required>
+                    <input type="email" name="email" placeholder="Your Email" required>
+                    <textarea name="message" rows="6" placeholder="Your Message" required></textarea>
+                    <button type="submit" class="btn btn2">Submit</button>
+                </form>
+                <div class="message-box-container" id="messageBox">
+                    <div class="message-box">
+                        <p id="successMessage"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="CR">
+        <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
+    </div>
+</div>
+
+
+<script>
+function openAboutTab(evt, tabName) {
+    // Hide all tab content
+    var tabcontent = document.getElementsByClassName("tab-content");
+    for (var i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList.remove("active");
+    }
+
+    // Remove active class from all tab links
+    var tablinks = document.getElementsByClassName("tab-link");
+    for (var i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+    }
+
+    // Show the selected tab content and mark the button as active
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+</script>

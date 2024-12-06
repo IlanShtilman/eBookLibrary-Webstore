@@ -1,0 +1,29 @@
+@model LibraryProject.Models.Book
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>View Book</title>
+</head>
+
+<body>
+<h1>Book Preview</h1>
+<div>
+    Book Title: @Model.Title <br/>
+    Book Author: @Model.Author <br/>
+    Book Publisher: @Model.Publisher <br/>
+    Publish Year: @Model.PublishYear <br/>
+    Genre: @Model.Genre <br/>
+    Borrow Price: @Model.BorrowPrice <br/>
+    Buy Price: @Model.BuyPrice <br/>
+</div>
+
+<div>
+    <button>Buy Book</button>
+    <button>Borrow Book</button>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+
+@section Styles {
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts - Heebo -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Your login page CSS -->
+    <link rel="stylesheet" href="~/css/login.css" />
+}
+
+<div id="login-section">
+    <div class="container">
+        <div class="login-container">
+            <div class="login-image">
+                <img src="~/images/Reading Books.png" alt="Reading Books" class="reading-photo">
+            </div>
+            <div class="login-form-container">
+                <h2>Welcome Back!</h2>
+                <p class="login-subtitle">Sign in to access your digital library</p>
+
+                <!-- Display error messages -->
+                @if (!string.IsNullOrEmpty(ViewBag.Message))
+                {
+                    <p class="error-message">@ViewBag.Message</p>
+                }
+
+                <form class="login-form" method="post" asp-controller="User" asp-action="Login">
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" name="Email" placeholder="Email Address" required>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="Password" placeholder="Password" required>
+                    </div>
+
+                    <div class="form-options">
+                        <a asp-controller="User" asp-action="ForgotPassword" class="forgot-password">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn">Sign In</button>
+                </form>
+
+                <p class="signup-text">
+                    Don't have an account? <a asp-controller="User" asp-action="Register">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
