@@ -1,2 +1,15 @@
 /LibraryProject/bin/
 /LibraryProject/obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+[Bb]in/
+[Oo]bj/
+.vs/
+.idea/
+*.user
+*.cache
+packages/
+*.nupkg
+project.assets.json
+.nuget.
