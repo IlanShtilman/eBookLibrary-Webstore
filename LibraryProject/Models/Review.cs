@@ -8,7 +8,4 @@ public class Review
     public string Content { get; set; }
     public DateTime CreatedAt { get; set; }
     
-    //Relations
-    //public Book Book { get; set; }
-    //public User User { get; set; }
 }

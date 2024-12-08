@@ -2,6 +2,7 @@ using LibraryProject.Data;
 using LibraryProject.Data.Enums;
 using LibraryProject.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryProject.Controllers;
 
@@ -62,5 +63,52 @@ public class BookController : Controller
             }
         }
         return View(book);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> Store(string searchQuery = null, string genre = null)
+    {
+        var query = _context.Books.AsQueryable();
+
+        // Apply search filter
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            query = query.Where(b => b.Title.Contains(searchQuery) || 
+                                     b.Author.Contains(searchQuery));
+        }
+
+        // Apply genre filter
+        if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
+        {
+            if (Enum.TryParse<Genre>(genre, true, out Genre genreEnum))
+            {
+                query = query.Where(b => b.Genre == genreEnum);
+            }
+        }
+
+        var books = await query.ToListAsync();
+        return View("BookStore", books);
+    }
+    [HttpGet]
+    public async Task<JsonResult> FilterBooks(string searchQuery = null, string genre = null)
+    {
+        var query = _context.Books.AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            query = query.Where(b => b.Title.Contains(searchQuery) || 
+                                     b.Author.Contains(searchQuery));
+        }
+
+        if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
+        {
+            if (Enum.TryParse<Genre>(genre, true, out Genre genreEnum))
+            {
+                query = query.Where(b => b.Genre == genreEnum);
+            }
+        }
+
+        var books = await query.ToListAsync();
+        return Json(books);
     }
 }
