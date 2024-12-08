@@ -7,7 +7,14 @@
         <nav>
             <ul id="sideMenu">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                @if (ViewBag.Username != null)
+                {
+                    <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                }
+                else
+                {
+                    <li><a asp-controller="User" asp-action="Login">Profile</a></li>
+                }
                 <li><a asp-controller="Project" asp-action="Index">Store</a></li>
                 <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
                 <i class="fas fa-times" onclick="closeMenu()"></i>
@@ -19,17 +26,17 @@
                 <a href="#" class="icon-link">
                     <i class="fa-solid fa-cart-shopping"></i>
                 </a>
-            </div>
-            <div>
                 @if (ViewBag.Username != null)
                 {
-                    <p>Welcome, @ViewBag.Username!</p>
-                    <a asp-controller="User" asp-action="Logout">Logout</a>
+                    <a asp-controller="User" asp-action="Logout" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 }
                 else
                 {
-                    <p>You are not logged in.</p>
-                    <a asp-controller="User" asp-action="Login">Login</a>
+                    <a asp-controller="User" asp-action="Login" class="login-link">
+                        <i class="fas fa-user"></i>
+                    </a>
                 }
             </div>
             <i class="fas fa-bars" onclick="openMenu()"></i>
@@ -41,7 +48,14 @@
 <div id="Search">
     <div class="container">
         <img src="~/images/Homepage.png" class="homephoto" alt="Description">
-        <h1>Hello There!</h1>
+        @if (ViewBag.Username != null)
+        {
+            <h1>Hello @ViewBag.Username!</h1>
+        }
+        else
+        {
+            <h1>Hello There!</h1>
+        }
         <p>Welcome to ilan's and ariel's eBook Store! our community's center for lifelong curiosity, learning and reading</p>
         <div class="search-container">
             <input type="text" class="search-bar" placeholder="What would you like to explore today?" aria-label="Search books" />
