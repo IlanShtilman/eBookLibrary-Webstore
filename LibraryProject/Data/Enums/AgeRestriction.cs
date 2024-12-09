@@ -2,7 +2,10 @@ namespace LibraryProject.Data.Enums;
 
 public enum AgeRestriction
 {
-    Adult, // 18+
-    Child, // 8+
-    Senior, // 14+
+    All,
+    ThreePlus,    // 3+
+    SevenPlus,    // 7+
+    TwelvePlus,   // 12+
+    SixteenPlus,  // 16+
+    EighteenPlus  // 18+
 }

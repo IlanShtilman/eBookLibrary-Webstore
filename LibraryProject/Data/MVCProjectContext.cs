@@ -17,11 +17,11 @@ namespace LibraryProject.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.HasDefaultSchema("PERSTIM");  
+            modelBuilder.HasDefaultSchema("SHTILMAN");  
 
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("USERS","PERSTIN");
+                entity.ToTable("USERS","SHTILMAN");
                 entity.HasKey(e => e.Username);
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
@@ -41,7 +41,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Book>(entity =>
             {
-                entity.ToTable("BOOKS","PERSTIN");
+                entity.ToTable("BOOKS","SHTILMAN");
                 entity.HasKey(e => e.BookId);
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.Title).HasColumnName("TITLE");
@@ -56,6 +56,7 @@ namespace LibraryProject.Data
                 entity.Property(e => e.AvailableCopies).HasColumnName("AVAILABLECOPIES");
                 entity.Property(e => e.IsAvailableToBuy).HasColumnName("ISAVAILABLETOBUY");
                 entity.Property(e => e.IsAvailableToBorrow).HasColumnName("ISAVAILABLETOBORROW");
+                // Fix these to match your database column names
                 entity.Property(e => e.IsEpubAvailable).HasColumnName("ISEPUB");
                 entity.Property(e => e.IsF2bAvailable).HasColumnName("ISF2B");
                 entity.Property(e => e.IsMobiAvailable).HasColumnName("ISMOBI");

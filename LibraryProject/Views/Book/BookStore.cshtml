@@ -1,0 +1,154 @@
+@using LibraryProject.Data.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<LibraryProject.Models.Book>
+@{
+    ViewData["Title"] = "Store";
+    // Add these debug lines
+    var bookCount = Model?.Count() ?? 0;
+    var firstBook = Model?.FirstOrDefault();
+}
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/BookStore.css" asp-append-version="true"/>
+@* Section of Header website *@
+<div id="header">
+    <div class="container">
+        <nav>
+            <ul id="sideMenu">
+                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                @if (ViewBag.Username != null)
+                {
+                    <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                }
+                else
+                {
+                    <li><a asp-controller="User" asp-action="Login">Profile</a></li>
+                }
+                <li><a asp-controller="Project" asp-action="Index">Store</a></li>
+                <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
+                <i class="fas fa-times" onclick="closeMenu()"></i>
+            </ul>
+            <div class="nav-icons">
+                <a href="#" class="icon-link">
+                    <i class="fa-solid fa-heart"></i>
+                </a>
+                <a href="#" class="icon-link">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+                @if (ViewBag.Username != null)
+                {
+                    <a asp-controller="User" asp-action="Logout" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="User" asp-action="Login" class="login-link">
+                        <i class="fas fa-user"></i>
+                    </a>
+                }
+            </div>
+            <i class="fas fa-bars" onclick="openMenu()"></i>
+        </nav>
+    </div>
+</div>
+
+<div id="card-area">
+    <div class="wrapper">
+        <div class="box-area">
+            <!-- HP Card -->
+            <div class="box">
+                <img src="~/images/HP.jpg" alt="Harry Potter Series">
+                <div class="overlay">
+                    <h3>Fantasy Books</h3>
+                    <p>Discover magical worlds and epic adventures. Join Harry Potter on his journey through Hogwarts.</p>
+                    <a href="#" class="book-now">Explore</a>
+                </div>
+            </div>
+
+            <!-- Eragon Card -->
+            <div class="box">
+                <img src="~/images/ERAGON.jpeg" alt="Eragon Series">
+                <div class="overlay">
+                    <h3>Epic Fantasy</h3>
+                    <p>Experience legendary tales of dragons and heroes with Eragon and Saphira.</p>
+                    <a href="#" class="book-now">Explore</a>
+                </div>
+            </div>
+            <!-- Gambit Card -->
+            <div class="box">
+                <img src="~/images/Gambit.jpeg" alt="Gambit Series">
+                <div class="overlay">
+                    <h3>Hard Thinking</h3>
+                    <p>Experience legendary tales of dragons and heroes with Eragon and Saphira.</p>
+                    <a href="#" class="book-now">Explore</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- -->
+<div class="search-filter-wrapper">
+    <div class="sf-search">
+        <input
+            type="search"
+            class="sf-search__input"
+            placeholder="Search books by title or author..."
+        />
+        <button class="sf-search__button">Search</button>
+    </div>
+
+    <div class="sf-filter">
+        <button class="sf-filter__btn sf-filter__btn--active" data-genre="all">All</button>
+        @foreach (Genre genre in Enum.GetValues(typeof(Genre)))
+        {
+            <button class="sf-filter__btn" data-genre="@genre">@genre</button>
+        }
+    </div>
+
+    <div class="sf-products">
+        @foreach (var book in Model)
+        {
+            <div class="sf-product-card @book.Genre">
+                <div class="sf-product-card__image-wrapper">
+                    <img class="sf-product-card__image" src="~/images/book-placeholder.jpg" alt="@book.Title" />
+                </div>
+                <div class="sf-product-card__content">
+                    <h5 class="sf-product-card__title">@book.Title</h5>
+                    <p class="sf-product-card__author">by @book.Author</p>
+                    <div class="sf-product-card__formats">
+                        @if (book.IsEpubAvailable) { <span class="format-badge">EPUB</span> }
+                        @if (book.IsPdfAvailable) { <span class="format-badge">PDF</span> }
+                        @if (book.IsMobiAvailable) { <span class="format-badge">MOBI</span> }
+                        @if (book.IsF2bAvailable) { <span class="format-badge">F2B</span> }
+                    </div>
+                    <div class="sf-product-card__prices">
+                        <p class="price">Buy: $@book.BuyPrice</p>
+                        <p class="price">Borrow: $@book.BorrowPrice</p>
+                    </div>
+                    <div class="sf-product-card__actions">
+                        @if (book.IsAvailableToBuy)
+                        {
+                            <button class="buy-btn" data-book-id="@book.BookId">Buy</button>
+                        }
+                        @if (book.IsAvailableToBorrow && book.AvailableCopies > 0)
+                        {
+                            <button class="borrow-btn" data-book-id="@book.BookId">Borrow</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@* Keep existing footer *@
+<div class="CR">
+    <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
+</div>
+
+@section Scripts {
+    <script src="~/js/BookStore.js" asp-append-version="true"></script>
+}
