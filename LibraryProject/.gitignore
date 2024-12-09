@@ -13,3 +13,26 @@ packages/
 *.nupkg
 project.assets.json
 .nuget.
+# Build output directories
+bin/
+obj/
+x86/
+[Bb]uild/
+[Ll]og/
+# User-specific files
+*.suo
+*.userosscache
+*.sln.docstates
+# Visual Studio cache/options directory
+# NuGet Packages
+.nuget/
+# Compiled output
+*.exe
+*.dll
+*.pdb
+*.ref
+*.refint
+# Compiled configuration files
+*.editorconfigg
+*.genruntimeconfig.cache
+*.staticwebassets.runtime.json
