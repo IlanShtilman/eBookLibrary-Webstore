@@ -1,29 +1,63 @@
-@model LibraryProject.Models.Book
-
-<!DOCTYPE html>
-
-<html>
-<head>
-    <meta name="viewport" content="width=device-width"/>
-    <title>View Book</title>
-</head>
-
-<body>
-<h1>Book Preview</h1>
-<div>
-    Book Title: @Model.Title <br/>
-    Book Author: @Model.Author <br/>
-    Book Publisher: @Model.Publisher <br/>
-    Publish Year: @Model.PublishYear <br/>
-    Genre: @Model.Genre <br/>
-    Borrow Price: @Model.BorrowPrice <br/>
-    Buy Price: @Model.BuyPrice <br/>
+@model Book
+<div class="ordered-books-container">
+    <div class="container">
+        <div class="book-navigation">
+            @if (ViewBag.PrevBookId != null)
+            {
+                <a asp-action="ViewBook" asp-route-id="@ViewBag.PrevBookId" class="nav-link">← Previous Book</a>
+            }
+            @if (ViewBag.NextBookId != null)
+            {
+                <a asp-action="ViewBook" asp-route-id="@ViewBag.NextBookId" class="nav-link">Next Book →</a>
+            }
+        </div>
+        <div class="book-details">
+            <h2 class="ordered-books-title">@Model.Title</h2>
+            <div class="book-info">
+                <p><strong>Author:</strong> @Model.Author</p>
+                <p><strong>Genre:</strong> @Model.Genre</p>
+                <p><strong>Publisher:</strong> @Model.Publisher</p>
+                <p><strong>Published:</strong> @Model.PublishYear</p>
+                <p><strong>Buy Price:</strong> $@Model.BuyPrice.ToString("F2")</p>
+                <p><strong>Borrow Price:</strong> $@Model.BorrowPrice.ToString("F2")</p>
+            </div>
+        </div>
+        <div class="reviews-section">
+            <h3>Reviews</h3>
+            @{
+                var reviews = ViewBag.Reviews as IEnumerable<dynamic>;
+                if (reviews == null || !reviews.Any())
+                {
+                    <p class="no-reviews">No reviews yet. Be the first to review this book!</p>
+                }
+                else
+                {
+                    foreach (var review in reviews)
+                    {
+                        <div class="review-item">
+                            <div class="review-header">
+                                <h4>@review.Title</h4>
+                                <div class="rating">
+                                    @for (int i = 0; i < review.Rating; i++)
+                                    {
+                                        <span class="star">★</span>
+                                    }
+                                    @for (int i = review.Rating; i < 5; i++)
+                                    {
+                                        <span class="star empty">☆</span>
+                                    }
+                                </div>
+                            </div>
+                            <p class="review-meta">By @review.User.FirstName @review.User.LastName on @review.CreatedAt.ToString("dd/MM/yyyy")</p>
+                            <p class="review-content">@review.Content</p>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
 </div>
-
-<div>
-    <button>Buy Book</button>
-    <button>Borrow Book</button>
-</div>
-
-</body>
-</html>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ordered-books.css" />
+    <link rel="stylesheet" href="~/css/review.css" />
+}

@@ -1,0 +1,100 @@
+.ordered-books-container {
+    padding: 50px 0;
+    background: #f6f4ea;
+    border-bottom: 2px solid #D3CFBD;
+}
+.ordered-books-title {
+    text-align: center;
+    font-size: 2.5em;
+    color: #000000;
+    position: relative;
+    display: inline-block;
+    margin-bottom: 40px;
+    padding: 0 15px;
+    font-weight: bold;
+}
+.ordered-books-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    height: 70%;
+    width: 4px;
+    background: #4682b4;
+    border-radius: 2px;
+}
+.ordered-books {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+.book-item {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.book-item:hover {
+    transform: translateY(-5px);
+}
+.book-item h3 {
+    color: #000;
+    font-size: 1.3em;
+    margin: 0;
+}
+.book-item p {
+    color: #666;
+    margin: 0;
+}
+.review-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background: white;
+    color: #333;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 1px solid #D3CFBD;
+    transition: all 0.3s ease;
+    text-align: center;
+    margin-top: auto;
+}
+.review-link:hover {
+    color: #4682b4;
+    background: #f6f4ea;
+    font-weight: bold;
+    transform: translateY(-2px);
+}
+.no-books-message {
+    text-align: center;
+    color: #666;
+    font-size: 1.2em;
+    padding: 40px;
+}
+.order-summary {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.order-summary h3, .order-summary h4 {
+    color: #333;
+    margin: 10px 0;
+}
+.back-link-container {
+    text-align: center;
+    margin-top: 30px;
+}
+@media only screen and (max-width: 768px) {
+    .ordered-books {
+        grid-template-columns: 1fr;
+    }
+    .ordered-books-title {
+        font-size: 2em;
+    }
+    .book-item {
+        padding: 20px;
+    }
+}

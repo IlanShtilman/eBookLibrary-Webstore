@@ -21,21 +21,55 @@ public class BookController : Controller
         return View();
     }
     
-    public ActionResult ViewBook()
+    public async Task<IActionResult> ViewBook(int id)
     {
-        // An action for viewing book.
-        Book book = new Book
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == id);
+        if (book == null)
         {
-            BookId = 1,
-            Title = "The book",
-            Author = "Yossi Cohen",
-            Publisher = "Toni Boni",
-            PublishYear = 1990,
-            Genre = Genre.Fantasy,
-            BuyPrice = 15.99,
-            BorrowPrice = 10.99
-        };
-        return View("ViewBook", book);
+            return NotFound();
+        }
+
+        // Fetch reviews for the book
+        var reviews = await _context.Reviews
+            .Where(r => r.BookId == id)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        // Fetch related user details
+        var usernames = reviews.Select(r => r.Username).Distinct();
+        var users = await _context.Users
+            .Where(u => usernames.Contains(u.Username))
+            .ToDictionaryAsync(u => u.Username);
+
+        // Attach user details to reviews
+        var reviewDetails = reviews.Select(r => new
+        {
+            r.Title,
+            r.Content,
+            r.Rating,
+            r.CreatedAt,
+            User = users.TryGetValue(r.Username, out var user)
+                ? new { user.FirstName, user.LastName }
+                : null // Handle the case if a user doesn't exist
+        }).ToList();
+
+        ViewBag.Reviews = reviewDetails;
+
+        // Get next and previous book IDs
+        var nextBook = await _context.Books
+            .Where(b => b.BookId > id)
+            .OrderBy(b => b.BookId)
+            .FirstOrDefaultAsync();
+
+        var prevBook = await _context.Books
+            .Where(b => b.BookId < id)
+            .OrderByDescending(b => b.BookId)
+            .FirstOrDefaultAsync();
+
+        ViewBag.NextBookId = nextBook?.BookId;
+        ViewBag.PrevBookId = prevBook?.BookId;
+
+        return View(book);
     }
     
     [HttpGet]

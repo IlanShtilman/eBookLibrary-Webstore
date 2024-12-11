@@ -12,16 +12,22 @@ namespace LibraryProject.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Order> Orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.HasDefaultSchema("SHTILMAN");  
+            modelBuilder.HasDefaultSchema("PERSTIN");
 
+            
+                
+            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "PERSTIN").StartsAt(0).IncrementsBy(1);
+            
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("USERS","SHTILMAN");
+                entity.ToTable("USERS","PERSTIN");
                 entity.HasKey(e => e.Username);
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
@@ -37,11 +43,12 @@ namespace LibraryProject.Data
                 entity.Property(e => e.Role)
                     .HasColumnName("ROLE")
                     .HasConversion<string>();
+                
             });
             
             modelBuilder.Entity<Book>(entity =>
             {
-                entity.ToTable("BOOKS","SHTILMAN");
+                entity.ToTable("BOOKS","PERSTIN");
                 entity.HasKey(e => e.BookId);
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.Title).HasColumnName("TITLE");
@@ -62,7 +69,32 @@ namespace LibraryProject.Data
                 entity.Property(e => e.IsMobiAvailable).HasColumnName("ISMOBI");
                 entity.Property(e => e.IsPdfAvailable).HasColumnName("ISPDF");
             });
-            
+
+            modelBuilder.Entity<Review>(entity =>
+            {
+                entity.ToTable("REVIEWS", "PERSTIN");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("REVIEWID");
+                entity.Property(e => e.Username).HasColumnName("USERNAME");
+                entity.Property(e => e.BookId).HasColumnName("BOOKID");
+                entity.Property(e => e.Title).HasColumnName("TITLE");
+                entity.Property(e => e.Content).HasColumnName("CONTENT");
+                entity.Property(e => e.Rating).HasColumnName("RATING");
+                entity.Property(e => e.CreatedAt).HasColumnName("REVIEWDATE");
+            });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.ToTable("ORDERS", "PERSTIN");
+                entity.HasKey(e => new { e.OrderId, e.Username, e.BookId });
+                entity.Property(e => e.OrderId).HasColumnName("ORDERID");
+                entity.Property(e => e.Username).HasColumnName("USERNAME");
+                entity.Property(e => e.BookId).HasColumnName("BOOKID");
+                entity.Property(e => e.Action).HasColumnName("ACTION");
+                entity.Property(e => e.Price).HasColumnName("PRICE");
+                entity.Property(e => e.Quantity).HasColumnName("QUANTITY");
+                entity.Property(e => e.OrderDate).HasColumnName("ORDERDATE");
+            });
         }
     }
 }

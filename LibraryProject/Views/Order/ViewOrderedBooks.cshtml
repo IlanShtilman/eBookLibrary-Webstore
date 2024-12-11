@@ -1,0 +1,33 @@
+@model IEnumerable<dynamic>
+<div class="ordered-books-container">
+    <div class="container">
+        <h2 class="ordered-books-title">Your Orders</h2>
+        @if (Model == null || !Model.Any())
+        {
+            <div class="no-books-message">
+                <p>You haven't placed any orders yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="ordered-books">
+                @foreach (var order in Model)
+                {
+                    <div class="book-item">
+                        <h3>Order from @order.OrderDate.ToString("dd.MM.yyyy")</h3>
+                        <p><strong>Total Price:</strong> $@order.TotalPrice.ToString("F2")</p>
+                        @foreach (var orderId in order.OrderIds)
+                        {
+                            <a asp-controller="Order" asp-action="OrderDetails" asp-route-orderId="@orderId" class="review-link">
+                                View Order Details
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ordered-books.css" />
+}

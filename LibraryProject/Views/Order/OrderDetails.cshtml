@@ -1,0 +1,73 @@
+@model IEnumerable<dynamic>
+<div class="ordered-books-container">
+    <div class="container">
+        <h2 class="ordered-books-title">Order Details</h2>
+        <div class="order-summary">
+            <h3>Order Date: @ViewBag.OrderDate.ToString("dd/MM/yyyy")</h3>
+            <h4>Total Order Price: $@ViewBag.TotalOrderPrice.ToString("F2")</h4>
+        </div>
+        <div class="ordered-books">
+            @foreach (var detail in Model)
+            {
+                <div class="book-item">
+                    <h3>@detail.BookTitle</h3>
+                    <p><strong>Action:</strong> @detail.Action</p>
+                    <p><strong>Quantity:</strong> @detail.Quantity</p>
+                    <p><strong>Price per item:</strong> $@detail.Price.ToString("F2")</p>
+                    <p><strong>Total:</strong> $@detail.TotalPrice.ToString("F2")</p>
+                    <div class="action-links">
+                        <a asp-controller="Review" asp-action="Create" asp-route-bookId="@detail.BookId" class="review-link">
+                            Write a Review
+                        </a>
+                        <a asp-controller="Book" asp-action="ViewBook" asp-route-id="@detail.BookId" class="review-link">
+                            View Book Details
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="back-link-container">
+            <a asp-controller="Order" asp-action="ViewOrderedBooks" class="review-link">
+                Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ordered-books.css" />
+}
+
+
+
+@*
+@model IEnumerable<dynamic>
+<div class="ordered-books-container">
+    <div class="container">
+        <h2 class="ordered-books-title">Order Details</h2>
+        <div class="order-summary">
+            <h3>Order Date: @ViewBag.OrderDate.ToString("dd/MM/yyyy")</h3>
+            <h4>Total Order Price: $@ViewBag.TotalOrderPrice.ToString("F2")</h4>
+        </div>
+        <div class="ordered-books">
+            @foreach (var detail in Model)
+            {
+                <div class="book-item">
+                    <h3>@detail.BookTitle</h3>
+                    <p><strong>Action:</strong> @detail.Action</p>
+                    <p><strong>Quantity:</strong> @detail.Quantity</p>
+                    <p><strong>Price per item:</strong> $@detail.Price.ToString("F2")</p>
+                    <p><strong>Total:</strong> $@detail.TotalPrice.ToString("F2")</p>
+                </div>
+            }
+        </div>
+        <div class="back-link-container">
+            <a asp-controller="Order" asp-action="ViewOrderedBooks" class="review-link">
+                Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/ordered-books.css" />
+}
+*@
