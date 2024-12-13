@@ -10,49 +10,60 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="~/css/BookStore.css" asp-append-version="true"/>
+@{
+    var username = ViewBag.Username;
+}
 @* Section of Header website *@
 <div id="header">
     <div class="container">
         <nav>
             <ul id="sideMenu">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                @if (ViewBag.Username != null)
-                {
-                    <li><a asp-controller="About" asp-action="Index">Profile</a></li>
-                }
-                else
-                {
-                    <li><a asp-controller="User" asp-action="Login">Profile</a></li>
-                }
-                <li><a asp-controller="Project" asp-action="Index">Store</a></li>
-                <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
-                <i class="fas fa-times" onclick="closeMenu()"></i>
+                <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                <li><a asp-controller="Book" asp-action="Store">Store</a></li>
+                <li><a asp-controller="Home" asp-action="Index">Contact</a></li>
             </ul>
             <div class="nav-icons">
-                <a href="#" class="icon-link">
-                    <i class="fa-solid fa-heart"></i>
-                </a>
-                <a href="#" class="icon-link">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </a>
-                @if (ViewBag.Username != null)
+                @if (string.IsNullOrEmpty(username))
                 {
-                    <a asp-controller="User" asp-action="Logout" class="logout-link">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <a asp-controller="User" asp-action="Login" class="icon-link">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                    <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                        <i class="fa-solid fa-heart"></i>
+                    </a>
+                    <a href="#" class="icon-link">
+                        <i class="fa-solid fa-cart-shopping"></i>
                     </a>
                 }
                 else
                 {
-                    <a asp-controller="User" asp-action="Login" class="login-link">
-                        <i class="fas fa-user"></i>
+                    <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                        <i class="fa-solid fa-heart"></i>
+                    </a>
+                    <a href="#" class="icon-link">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </a>
+                    <a asp-controller="User" asp-action="Logout" class="icon-link">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </a>
                 }
             </div>
-            <i class="fas fa-bars" onclick="openMenu()"></i>
         </nav>
     </div>
 </div>
 
+@* Discount Section *@
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Holiday Season Sale<br>Up to 55% Off!</h1>
+        <p class="hero-subtitle">Celebrate the New Year with amazing discounts on your favorite books.</p>
+        <a href="#" class="hero-button">Shop Now</a>
+    </div>
+    <div class="hero-decoration"></div>
+</div>
+
+@* Summery of books *@
 <div id="card-area">
     <div class="wrapper">
         <div class="box-area">
@@ -89,8 +100,11 @@
     </div>
 </div>
 
-<!-- -->
+@* Filter and Search section *@
 <div class="search-filter-wrapper">
+    <div class="book-count">
+        Showing @bookCount books
+    </div>
     <div class="sf-search">
         <input
             type="search"
@@ -99,47 +113,93 @@
         />
         <button class="sf-search__button">Search</button>
     </div>
-
-    <div class="sf-filter">
-        <button class="sf-filter__btn sf-filter__btn--active" data-genre="all">All</button>
-        @foreach (Genre genre in Enum.GetValues(typeof(Genre)))
-        {
-            <button class="sf-filter__btn" data-genre="@genre">@genre</button>
-        }
-    </div>
-
-    <div class="sf-products">
+    <div class="sf-controls">
+        <div class="sf-sort">
+            <select id="sortSelect" class="sf-sort__select">
+                <option value="">Sort by...</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="year_desc">Newest First</option>
+                <option value="year_asc">Oldest First</option>
+                <option value="popular">Most Popular</option>
+            </select>
+        </div>
+        <div class="sf-filter">
+            <div class="filter-group">
+                <label>Genre:</label>
+                <button class="sf-filter__btn sf-filter__btn--active" data-genre="all">All</button>
+                @foreach (Genre genre in Enum.GetValues(typeof(Genre)))
+                {
+                    <button class="sf-filter__btn" data-genre="@genre">@genre</button>
+                }
+            </div>
+            <div class="filter-group">
+                <label>Age Restriction:</label>
+                <select id="ageRestrictionSelect" class="sf-filter__select">
+                    <option value="">All Ages</option>
+                    @foreach (AgeRestriction age in Enum.GetValues(typeof(AgeRestriction)))
+                    {
+                        <option value="@age">@age</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Price Range:</label>
+                <input type="number" id="minPrice" placeholder="Min" class="sf-filter__input" />
+                <input type="number" id="maxPrice" placeholder="Max" class="sf-filter__input" />
+            </div>
+            <div class="filter-group">
+                <label>Publication Year:</label>
+                <input type="number" id="publishYear" placeholder="Year" class="sf-filter__input" />
+            </div>
+        </div>
+        
+    @* Showing books and deatils *@
+    </div><div class="sf-products">
         @foreach (var book in Model)
         {
-            <div class="sf-product-card @book.Genre">
-                <div class="sf-product-card__image-wrapper">
-                    <img class="sf-product-card__image" src="~/images/book-placeholder.jpg" alt="@book.Title" />
-                </div>
-                <div class="sf-product-card__content">
-                    <h5 class="sf-product-card__title">@book.Title</h5>
-                    <p class="sf-product-card__author">by @book.Author</p>
-                    <div class="sf-product-card__formats">
-                        @if (book.IsEpubAvailable) { <span class="format-badge">EPUB</span> }
-                        @if (book.IsPdfAvailable) { <span class="format-badge">PDF</span> }
-                        @if (book.IsMobiAvailable) { <span class="format-badge">MOBI</span> }
-                        @if (book.IsF2bAvailable) { <span class="format-badge">F2B</span> }
-                    </div>
-                    <div class="sf-product-card__prices">
-                        <p class="price">Buy: $@book.BuyPrice</p>
-                        <p class="price">Borrow: $@book.BorrowPrice</p>
-                    </div>
-                    <div class="sf-product-card__actions">
-                        @if (book.IsAvailableToBuy)
-                        {
-                            <button class="buy-btn" data-book-id="@book.BookId">Buy</button>
-                        }
-                        @if (book.IsAvailableToBorrow && book.AvailableCopies > 0)
-                        {
-                            <button class="borrow-btn" data-book-id="@book.BookId">Borrow</button>
-                        }
-                    </div>
-                </div>
-            </div>
+            <div class="sf-product-card @book.Genre" data-year="@book.PublishYear" data-age="@book.AgeRestriction">
+    <div class="sf-product-card__image-wrapper">
+        <img class="sf-product-card__image" src="~/images/book-placeholder.jpg" alt="@book.Title" />
+        <div class="sf-product-card__wishlist" data-book-id="@book.BookId">
+            <i class="fa-heart @(ViewBag.Wishlist?.Contains(book.BookId) == true ? "fas active" : "far")"></i>
+            
+        </div>
+        <div class="sf-product-card__quantity">
+            @book.AvailableCopies copies left
+        </div>
+    </div>
+    <div class="sf-product-card__content">
+        @* Verify these book properties match your Book model *@
+        <h5 class="sf-product-card__title">@book.Title</h5>
+        <p class="sf-product-card__author">by @book.Author</p>
+        <p class="sf-product-card__year">Published: @book.PublishYear</p>
+        <p class="sf-product-card__age">Age: @book.AgeRestriction</p>
+        <div class="sf-product-card__prices">
+            @* Add ToString("F2") to ensure proper price formatting *@
+            <p class="price">Buy: $@book.BuyPrice.ToString("F2")</p>
+            <p class="price">Borrow: $@book.BorrowPrice.ToString("F2")</p>
+        </div>
+        <div class="sf-product-card__actions">
+            @if (book.IsAvailableToBuy)
+            {
+                <button class="buy-btn @(book.AvailableCopies <= 0 ? "disabled" : "")"
+                        data-book-id="@book.BookId"
+                        @(book.AvailableCopies <= 0 ? "disabled" : "")>
+                    Buy
+                </button>
+            }
+            @if (book.IsAvailableToBorrow && book.AvailableCopies > 0)
+            {
+                <button class="borrow-btn @(book.AvailableCopies <= 0 ? "disabled" : "")"
+                        data-book-id="@book.BookId"
+                        @(book.AvailableCopies <= 0 ? "disabled" : "")>
+                    Borrow
+                </button>
+            }
+        </div>
+    </div>
+</div>
         }
     </div>
 </div>

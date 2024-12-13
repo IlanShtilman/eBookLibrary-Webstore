@@ -1,45 +1,47 @@
 ﻿@{
     ViewData["Title"] = "Home";
 }
+@{
+    var username = Context.Session.GetString("Username");
+}
 @* Section of Header website *@
 <div id="header">
     <div class="container">
         <nav>
             <ul id="sideMenu">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                @if (ViewBag.Username != null)
-                {
-                    <li><a asp-controller="About" asp-action="Index">Profile</a></li>
-                }
-                else
-                {
-                    <li><a asp-controller="User" asp-action="Login">Profile</a></li>
-                }
-                <li><a asp-controller="Project" asp-action="Index">Store</a></li>
-                <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
-                <i class="fas fa-times" onclick="closeMenu()"></i>
+                <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                <li><a asp-controller="Book" asp-action="Store">Store</a></li>
+                <li><a asp-controller="Home" asp-action="Index">Contact</a></li>
             </ul>
             <div class="nav-icons">
-                <a href="#" class="icon-link">
-                    <i class="fa-solid fa-heart"></i>
-                </a>
-                <a href="#" class="icon-link">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </a>
-                @if (ViewBag.Username != null)
-                {
-                    <a asp-controller="User" asp-action="Logout" class="logout-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                }
-                else
-                {
-                    <a asp-controller="User" asp-action="Login" class="login-link">
-                        <i class="fas fa-user"></i>
-                    </a>
-                }
+                <div class="nav-icons">
+                    @if (string.IsNullOrEmpty(username))
+                    {
+                        <a asp-controller="User" asp-action="Login" class="icon-link">
+                            <i class="fa-solid fa-user"></i>
+                        </a>
+                        <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-heart"></i>
+                        </a>
+                        <a href="#" class="icon-link">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-heart"></i>
+                        </a>
+                        <a href="#" class="icon-link">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </a>
+                        <a asp-controller="User" asp-action="Logout" class="icon-link">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    }
+                </div>
             </div>
-            <i class="fas fa-bars" onclick="openMenu()"></i>
         </nav>
     </div>
 </div>

@@ -9,25 +9,23 @@ namespace LibraryProject.Data
             : base(options)
         {
         }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Order> Orders { get; set; }
-
+        public DbSet<Wishlist> Wishlist { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.HasDefaultSchema("PERSTIN");
-
+            modelBuilder.HasDefaultSchema("SHTILMAN");
             
-                
-            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "PERSTIN").StartsAt(0).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "SHTILMAN").StartsAt(0).IncrementsBy(1);
             
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("USERS","PERSTIN");
+                entity.ToTable("USERS","SHTILMAN");
                 entity.HasKey(e => e.Username);
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
@@ -48,7 +46,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Book>(entity =>
             {
-                entity.ToTable("BOOKS","PERSTIN");
+                entity.ToTable("BOOKS","SHTILMAN");
                 entity.HasKey(e => e.BookId);
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.Title).HasColumnName("TITLE");
@@ -72,7 +70,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Review>(entity =>
             {
-                entity.ToTable("REVIEWS", "PERSTIN");
+                entity.ToTable("REVIEWS", "SHTILMAN");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("REVIEWID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -85,7 +83,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Order>(entity =>
             {
-                entity.ToTable("ORDERS", "PERSTIN");
+                entity.ToTable("ORDERS", "SHTILMAN");
                 entity.HasKey(e => new { e.OrderId, e.Username, e.BookId });
                 entity.Property(e => e.OrderId).HasColumnName("ORDERID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -94,6 +92,24 @@ namespace LibraryProject.Data
                 entity.Property(e => e.Price).HasColumnName("PRICE");
                 entity.Property(e => e.Quantity).HasColumnName("QUANTITY");
                 entity.Property(e => e.OrderDate).HasColumnName("ORDERDATE");
+            });
+            
+            modelBuilder.Entity<Wishlist>(entity =>
+            {
+                entity.ToTable("WISHLIST", "SHTILMAN");
+                entity.HasKey(e => new { e.Username, e.BookId });
+                entity.Property(e => e.Username).HasColumnName("USERNAME");
+                entity.Property(e => e.BookId).HasColumnName("BOOKID");
+                //Foreign key
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(e => e.Username)
+                    .HasConstraintName("FK_WISHLIST_USERS");
+
+                entity.HasOne<Book>()
+                    .WithMany()
+                    .HasForeignKey(e => e.BookId)
+                    .HasConstraintName("FK_WISHLIST_BOOKS");
             });
         }
     }
