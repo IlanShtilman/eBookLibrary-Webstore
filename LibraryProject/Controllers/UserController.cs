@@ -8,12 +8,6 @@ namespace LibraryProject.Controllers;
 
 public class UserController : Controller
 {
-    // GET
-    /*public IActionResult Index()
-    {
-        return View();
-    }*/
-    
     private readonly MVCProjectContext _context;
 
     public UserController(MVCProjectContext context)
@@ -95,7 +89,8 @@ public class UserController : Controller
         }
         return View(user);
     }
-    // Login Get/Post
+    
+    //Login Get/Post
     [HttpGet]
     public IActionResult Login()
     {
@@ -103,7 +98,6 @@ public class UserController : Controller
         return View("Login");
     }
 
-    [HttpPost]
     public async Task<IActionResult> Login(string Email, string Password)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
@@ -114,16 +108,16 @@ public class UserController : Controller
             return View("Login");
         }
 
+        // Store username in session
         HttpContext.Session.SetString("Username", user.Username);
-
+    
         return RedirectToAction("Index", "Home");
     }
 
-    // Logout
     public IActionResult Logout()
     {
-        HttpContext.Session.Clear();
-        return RedirectToAction("Login", "User");
+        HttpContext.Session.Clear(); // Clear all session data
+        return RedirectToAction("Index", "Home");
     }
     
 }
