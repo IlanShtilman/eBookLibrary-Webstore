@@ -6,6 +6,13 @@
 
 <h2>Add a New Book</h2>
 
+@if (TempData["Message"] != null)
+{
+    <script>
+        alert('@TempData["Message"]');
+    </script>
+}
+
 <form asp-action="AddBook" method="post">
     <div class="form-group">
         <label asp-for="BookId" class="control-label"></label>

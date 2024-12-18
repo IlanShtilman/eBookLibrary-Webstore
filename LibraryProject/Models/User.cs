@@ -30,6 +30,7 @@ public class User
     public Gender Gender { get; set; }
     [Required]
     public UserRole Role { get; set; }
+    public int MaxBorrowed { get; set; }
     
     //Relations
     //public ICollection<Review> Reviews { get; set; }

@@ -166,7 +166,7 @@
             
         </div>
         <div class="sf-product-card__quantity">
-            @book.AvailableCopies copies left
+            @book.AvailableCopies borrow copies left
         </div>
     </div>
     <div class="sf-product-card__content">
@@ -189,7 +189,7 @@
                     Buy
                 </button>
             }
-            @if (book.IsAvailableToBorrow && book.AvailableCopies > 0)
+            @if (book.AvailableCopies != 0 && book.AvailableCopies > 0)
             {
                 <button class="borrow-btn @(book.AvailableCopies <= 0 ? "disabled" : "")"
                         data-book-id="@book.BookId"
@@ -198,6 +198,12 @@
                 </button>
             }
         </div>
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="error-message">
+                @TempData["ErrorMessage"]
+            </div>
+        }
     </div>
 </div>
         }

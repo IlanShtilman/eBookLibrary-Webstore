@@ -74,8 +74,31 @@ public class BookController : Controller
     }
     
     [HttpGet]
-    public IActionResult AddBook()
+    public async Task<IActionResult> AddBook()
     {
+        string username = HttpContext.Session.GetString("Username");
+
+        if (string.IsNullOrEmpty(username))
+        {
+            return RedirectToAction("Login", "User");
+        }
+
+        var userRole = await _context.Users
+            .Where(u => u.Username == username)
+            .Select(u => u.Role)
+            .FirstOrDefaultAsync();
+
+        if (userRole == null)
+        {
+            return RedirectToAction("Login", "User");
+        }
+
+        if (userRole.ToString() != UserRole.Admin.ToString())
+        {
+            TempData["Message"] = "Access Denied! You do not have the required permissions.";
+            return RedirectToAction("Index", "Home");
+        }
+        
         // An action for user login.
         return View(new Book());
     }
@@ -83,6 +106,7 @@ public class BookController : Controller
     [HttpPost]
     public async Task<IActionResult> AddBook(Book book)
     {
+
         if (ModelState.IsValid)
         {
             try
@@ -273,4 +297,93 @@ public class BookController : Controller
         return Json(books);
     }
 
+    ///////////////////////
+    [HttpPost]
+    public async Task<IActionResult> BuyBook([FromBody] int bookId)
+    {   
+        //int x = bookId;
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            // User is not logged in, redirect to the Login page
+            return RedirectToAction("Login", "User");
+        }
+        
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
+        var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 
+            sc.BookId == book.BookId &&
+            sc.Username == username &&
+            sc.Action == "Buy");
+
+        if (ExistsShoppingCart != null)
+        {
+            ExistsShoppingCart.Quantity += 1;
+            ExistsShoppingCart.Price += book.BuyPrice;
+        }
+        else
+        {
+            var shoppingCart = new ShoppingCart
+            {
+                Username = username,
+                BookId = bookId,
+                Action = "Buy",
+                Quantity =  1,
+                Price = book.BuyPrice
+            };
+            _context.ShoppingCarts.Add(shoppingCart);
+        }
+
+        await _context.SaveChangesAsync();
+        
+        return View("BookStore"); 
+    }
+
+    public async Task<IActionResult> BorrowBook([FromBody] int bookId)
+    {   
+        //int x = bookId;
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            // User is not logged in, redirect to the Login page
+            return RedirectToAction("Login", "User");
+        }
+        
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
+        var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 
+            sc.BookId == book.BookId &&
+            sc.Username == username &&
+            sc.Action == "Borrow");
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+        if (user.MaxBorrowed < 3)
+        {
+            if (ExistsShoppingCart != null)
+            {
+                ExistsShoppingCart.Quantity += 1;
+                ExistsShoppingCart.Price += book.BorrowPrice;
+            }
+            else
+            {
+                var shoppingCart = new ShoppingCart
+                {
+                    Username = username,
+                    BookId = bookId,
+                    Action = "Borrow",
+                    Quantity = 1,
+                    Price = book.BorrowPrice
+                };
+                _context.ShoppingCarts.Add(shoppingCart);
+            }
+
+            book.AvailableCopies--;
+            user.MaxBorrowed++;
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            return Json(new { success = false, message = "You have reached the maximum limit of 3 borrowed books." });
+        }
+
+        return View("BookStore"); 
+    }
 }

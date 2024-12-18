@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fa-heart ${heartClass}"></i>
                     </div>
                     <div class="sf-product-card__quantity">
-                        ${book.availableCopies} copies left
+                        ${book.availableCopies} borrow copies left
                     </div>
                 </div>
                     <div class="sf-product-card__content">
@@ -282,12 +282,12 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.dataset.bookId;
                 try {
-                    const response = await fetch('/Book/UpdateBookQuantity', {
+                    const response = await fetch('/Book/BuyBook', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ bookId, isBorrow: false })
+                        body: JSON.stringify(bookId)
                     });
 
                     if (response.ok) {
@@ -302,22 +302,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Borrow button listeners
-        document.querySelectorAll('.borrow-btn:not(.disabled)').forEach(button => {
+        document.querySelectorAll('.borrow-btn').forEach(button => {
             button.addEventListener('click', async function() {
-                const bookId = this.dataset.bookId;
+                const bookId = this.getAttribute('data-book-id');
+
                 try {
-                    const response = await fetch('/Book/UpdateBookQuantity', {
+                    const response = await fetch('/Book/BorrowBook', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ bookId, isBorrow: true })
+                        body: JSON.stringify(bookId)
                     });
 
-                    if (response.ok) {
-                        filterBooks(); // Refresh the display
-                    } else if (response.status === 401) {
-                        window.location.href = '/User/Login';
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        // Create or update error message div
+                        let errorDiv = document.querySelector('.error-message');
+                        if (!errorDiv) {
+                            errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-message';
+                            this.closest('.sf-product-card__actions').insertAdjacentElement('afterend', errorDiv);
+                        }
+                        errorDiv.textContent = result.message;
+
+                        // Keep the error message visible until user clicks somewhere else
+                        const hideError = (e) => {
+                            if (!errorDiv.contains(e.target) && !this.contains(e.target)) {
+                                errorDiv.remove();
+                                document.removeEventListener('click', hideError);
+                            }
+                        };
+
+                        // Add click listener after a small delay to prevent immediate dismissal
+                        setTimeout(() => {
+                            document.addEventListener('click', hideError);
+                        }, 100);
+                        setTimeout(() => {
+                            if (errorDiv && errorDiv.parentNode) {
+                                errorDiv.remove();
+                                document.removeEventListener('click', hideError);
+                            }
+                        }, 3000);
+                    } else {
+                        // Remove error message if exists and success
+                        const errorDiv = document.querySelector('.error-message');
+                        if (errorDiv) {
+                            errorDiv.remove();
+                        }
+                        // Refresh the page on success
+                        window.location.reload();
                     }
                 } catch (error) {
                     console.error('Error:', error);
