@@ -1,24 +1,33 @@
 using System.Diagnostics;
+using LibraryProject.Data;
 using Microsoft.AspNetCore.Mvc;
 using LibraryProject.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryProject.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly MVCProjectContext _context;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, MVCProjectContext context)
     {
         _logger = logger;
+        _context = context;
     }
-
-    public IActionResult Index()
+    
+    public async Task<IActionResult> Index()
     {
-        ViewBag.Username = HttpContext.Session.GetString("Username");
-        return View();
+        var reviews = await _context.Reviews
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+        ViewBag.Username = HttpContext.Session.GetString("Username");    
+        return View(reviews);
     }
-
+    
+    
     public IActionResult Privacy()
     {
         return View();

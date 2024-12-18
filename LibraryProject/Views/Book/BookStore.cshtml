@@ -32,16 +32,13 @@
                     <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
                         <i class="fa-solid fa-heart"></i>
                     </a>
-                    <a href="#" class="icon-link">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                    </a>
                 }
                 else
                 {
                     <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
                         <i class="fa-solid fa-heart"></i>
                     </a>
-                    <a href="#" class="icon-link">
+                    <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
                         <i class="fa-solid fa-cart-shopping"></i>
                     </a>
                     <a asp-controller="User" asp-action="Logout" class="icon-link">

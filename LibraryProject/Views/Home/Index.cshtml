@@ -1,9 +1,11 @@
-﻿@{
+﻿@model IEnumerable<LibraryProject.Models.Review>
+@{
     ViewData["Title"] = "Home";
 }
 @{
     var username = Context.Session.GetString("Username");
 }
+
 @* Section of Header website *@
 <div id="header">
     <div class="container">
@@ -24,16 +26,14 @@
                         <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
                             <i class="fa-solid fa-heart"></i>
                         </a>
-                        <a href="#" class="icon-link">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                        </a>
+                        
                     }
                     else
                     {
                         <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
                             <i class="fa-solid fa-heart"></i>
                         </a>
-                        <a href="#" class="icon-link">
+                        <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
                             <i class="fa-solid fa-cart-shopping"></i>
                         </a>
                         <a asp-controller="User" asp-action="Logout" class="icon-link">
@@ -174,6 +174,77 @@
         </div>
     </div>
 </div>
+
+<div id="Reviews-section">
+    <div class="container">
+        <h2>Book Reviews</h2>
+        @if (Model != null && Model.Any())
+        {
+            <div id="myCarousel" class="carousel slide" data-ride="carousel">
+                <!-- Carousel indicators -->
+                <ol class="carousel-indicators">
+                    @{
+                        var i = 0;
+                        foreach (var review in Model)
+                        {
+                            <li data-target="#myCarousel" data-slide-to="@i" class="@(i == 0 ? "active" : "")"></li>
+                            i++;
+                        }
+                    }
+                </ol>
+                <!-- Wrapper for carousel items -->
+                <div class="carousel-inner">
+                    @{
+                        var isFirst = true;
+                        foreach (var review in Model)
+                        {
+                            <div class="carousel-item @(isFirst ? "active" : "")">
+                                <div class="img-box">
+                                    <img src="/images/default-user.jpg" alt="User">
+                                </div>
+                                <p class="testimonial">@review.Content</p>
+                                <p class="overview">
+                                    <b>@review.Username</b>
+                                    <br>
+                                    <span>@review.Title</span>
+                                </p>
+                                <div class="star-rating">
+                                    <ul class="list-inline">
+                                        @for (int star = 1; star <= 5; star++)
+                                        {
+                                            if (star <= review.Rating)
+                                            {
+                                                <li class="list-inline-item"><i class="fa fa-star"></i></li>
+                                            }
+                                            else
+                                            {
+                                                <li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                                <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            isFirst = false;
+                        }
+                    }
+                </div>
+                <!-- Carousel controls -->
+                <a class="carousel-control-prev" href="#myCarousel" data-slide="prev">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                <a class="carousel-control-next" href="#myCarousel" data-slide="next">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+        }
+        else
+        {
+            <p>No reviews available at the moment.</p>
+        }
+    </div>
+</div>
+
 
 @* Section of Reading Benefits *@
 <div id="Reading-Benefits">
