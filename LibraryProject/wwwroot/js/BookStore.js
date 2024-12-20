@@ -98,9 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="sf-product-card__actions">
                             ${book.isAvailableToBuy ?
-                `<button class="buy-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
+                `<button class="buy-btn" 
                                     data-book-id="${book.bookId}" 
-                                    ${book.availableCopies <= 0 ? 'disabled' : ''}>
+                                    >
                                     Buy
                                 </button>` : ''}
                             ${book.isAvailableToBorrow && book.availableCopies > 0 ?
@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.dataset.bookId;
                 try {
+                    console.log('Sending buy request for book ID:', bookId);
                     const response = await fetch('/Book/BuyBook', {
                         method: 'POST',
                         headers: {
@@ -290,23 +291,51 @@ document.addEventListener('DOMContentLoaded', function() {
                         body: JSON.stringify(bookId)
                     });
 
-                    if (response.ok) {
-                        filterBooks(); // Refresh the display
-                    } else if (response.status === 401) {
+                    console.log('Response status:', response.status);
+                    if (response.status === 401) {
                         window.location.href = '/User/Login';
+                        return;
+                    }
+
+                    const result = await response.json();
+                    console.log('Server response:', result);
+
+                    // Force show the message regardless of parent element
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = result.success ? 'success-message' : 'error-message';
+                    messageDiv.textContent = result.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.zIndex = '9999';
+
+                    document.body.appendChild(messageDiv);
+
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        if (messageDiv && messageDiv.parentNode) {
+                            messageDiv.remove();
+                        }
+                    }, 3000);
+
+                    if (result.success) {
+                        // Optional: Update UI or refresh data
+                        filterBooks();
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    showMessage(this, 'You must logged in to buy a book.', false);
                 }
             });
         });
 
-        // Borrow button listeners
+// Borrow button listeners with similar updates
         document.querySelectorAll('.borrow-btn').forEach(button => {
             button.addEventListener('click', async function() {
                 const bookId = this.getAttribute('data-book-id');
-
                 try {
+                    console.log('Sending borrow request for book ID:', bookId);
                     const response = await fetch('/Book/BorrowBook', {
                         method: 'POST',
                         headers: {
@@ -315,56 +344,107 @@ document.addEventListener('DOMContentLoaded', function() {
                         body: JSON.stringify(bookId)
                     });
 
+                    console.log('Response status:', response.status);
+                    if (response.status === 401) {
+                        window.location.href = '/User/Login';
+                        return;
+                    }
+
                     const result = await response.json();
+                    console.log('Server response:', result);
 
-                    if (!result.success) {
-                        // Create or update error message div
-                        let errorDiv = document.querySelector('.error-message');
-                        if (!errorDiv) {
-                            errorDiv = document.createElement('div');
-                            errorDiv.className = 'error-message';
-                            this.closest('.sf-product-card__actions').insertAdjacentElement('afterend', errorDiv);
+                    // Force show the message regardless of parent element
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = result.success ? 'success-message' : 'error-message';
+                    messageDiv.textContent = result.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.zIndex = '9999';
+
+                    document.body.appendChild(messageDiv);
+
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        if (messageDiv && messageDiv.parentNode) {
+                            messageDiv.remove();
                         }
-                        errorDiv.textContent = result.message;
+                    }, 3000);
 
-                        // Keep the error message visible until user clicks somewhere else
-                        const hideError = (e) => {
-                            if (!errorDiv.contains(e.target) && !this.contains(e.target)) {
-                                errorDiv.remove();
-                                document.removeEventListener('click', hideError);
-                            }
-                        };
-
-                        // Add click listener after a small delay to prevent immediate dismissal
-                        setTimeout(() => {
-                            document.addEventListener('click', hideError);
-                        }, 100);
-                        setTimeout(() => {
-                            if (errorDiv && errorDiv.parentNode) {
-                                errorDiv.remove();
-                                document.removeEventListener('click', hideError);
-                            }
-                        }, 3000);
-                    } else {
-                        // Remove error message if exists and success
-                        const errorDiv = document.querySelector('.error-message');
-                        if (errorDiv) {
-                            errorDiv.remove();
-                        }
-                        // Refresh the page on success
-                        window.location.reload();
+                    if (result.success) {
+                        // Optional: Update UI or refresh data
+                        filterBooks();
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    showMessage(this, 'You must logged in to borrow a book.', false);
                 }
             });
         });
+        function showMessage(element, message, isSuccess) {
+            // Remove any existing messages first
+            const existingMessages = document.querySelectorAll('.success-message, .error-message');
+            existingMessages.forEach(msg => msg.remove());
 
+            // Create the message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isSuccess ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+
+            // Find the closest parent card and append the message
+            const parentCard = element.closest('.sf-product-card__content');
+            if (parentCard) {
+                const actionsDiv = parentCard.querySelector('.sf-product-card__actions');
+                if (actionsDiv) {
+                    actionsDiv.insertAdjacentElement('afterend', messageDiv);
+                }
+            }
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (messageDiv && messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 3000);
+
+            // Remove on click outside
+            const handleClickOutside = (e) => {
+                if (!messageDiv.contains(e.target) && !element.contains(e.target)) {
+                    messageDiv.remove();
+                    document.removeEventListener('click', handleClickOutside);
+                }
+            };
+
+            // Add click listener after a small delay
+            setTimeout(() => {
+                document.addEventListener('click', handleClickOutside);
+            }, 100);
+        }
+        
+        
         // Prevent clicks on disabled buttons
         document.querySelectorAll('.buy-btn.disabled, .borrow-btn.disabled').forEach(button => {
             button.addEventListener('click', (e) => e.preventDefault());
         });
     }
 
+    document.addEventListener('DOMContentLoaded', function () {
+        var viewBookNavBtn = document.getElementById('viewBookNavBtn');
+        var addBookNavBtn = document.getElementById('viewBookNavBtn');
+        if (viewBookNavBtn) {
+            viewBookNavBtn.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent the default link behavior
+                window.location.href = '/Book/ViewBook'; // Redirect to the desired URL
+            });
+        }
+        if (addBookNavBtn) {
+            viewBookNavBtn.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent the default link behavior
+                window.location.href = '/Book/AddBook'; // Redirect to the desired URL
+            });
+        }
+    });
+    
     
 });

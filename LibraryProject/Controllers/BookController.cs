@@ -3,6 +3,7 @@ using LibraryProject.Data.Enums;
 using LibraryProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Oracle.ManagedDataAccess.Client;
 
 namespace LibraryProject.Controllers;
 
@@ -20,7 +21,21 @@ public class BookController : Controller
     {
         return View();
     }
-    
+
+    [HttpGet("Book/ViewBook")]
+    public async Task<IActionResult> ViewBook()
+    {
+        var book = await _context.Books.FirstOrDefaultAsync();
+
+        if (book == null)
+        {
+            return NotFound("No books found.");
+        }
+        
+        return RedirectToAction("ViewBook", "Book", new { id = book.BookId });
+    }
+
+    [HttpGet("Book/ViewBook/{id}")]
     public async Task<IActionResult> ViewBook(int id)
     {
         Console.WriteLine($"ViewBook called with id: {id}");
@@ -29,6 +44,18 @@ public class BookController : Controller
         {
             return NotFound();
         }
+
+        ViewBag.Role = 0;
+        string username = HttpContext.Session.GetString("Username");
+        if (username != null)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (user.Role == UserRole.Admin)
+            {
+                ViewBag.Role = 1;
+            }
+        }
+
 
         // Fetch reviews for the book
         var reviews = await _context.Reviews
@@ -82,6 +109,12 @@ public class BookController : Controller
         {
             return RedirectToAction("Login", "User");
         }
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user.Role != UserRole.Admin)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        
 
         var userRole = await _context.Users
             .Where(u => u.Username == username)
@@ -106,12 +139,42 @@ public class BookController : Controller
     [HttpPost]
     public async Task<IActionResult> AddBook(Book book)
     {
+        
+        int nextBookId;
+        using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
+        {
+            await connection.OpenAsync();
+            using (var command = new OracleCommand("SELECT PERSTIN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
+            {
+                nextBookId = Convert.ToInt32(await command.ExecuteScalarAsync());
+            }
+        }
 
         if (ModelState.IsValid)
         {
             try
             {
-                _context.Books.Add(book);
+                var newBook = new Book
+                {
+                    BookId = nextBookId,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Genre = book.Genre,
+                    AgeRestriction = book.AgeRestriction,
+                    Publisher = book.Publisher,
+                    PublishYear = book.PublishYear,
+                    BuyPrice = book.BuyPrice,
+                    BorrowPrice = book.BorrowPrice,
+                    TotalCopies = 1000,
+                    AvailableCopies = 3,
+                    IsAvailableToBuy = true,
+                    IsAvailableToBorrow = true,
+                    IsEpubAvailable = book.IsEpubAvailable,
+                    IsMobiAvailable = book.IsMobiAvailable,
+                    IsF2bAvailable = book.IsF2bAvailable,
+                    IsPdfAvailable = book.IsPdfAvailable,
+                };
+                _context.Books.Add(newBook);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Home");
             }
@@ -124,12 +187,51 @@ public class BookController : Controller
         return View(book);
     }
     
+    [HttpPost]
+    public async Task<IActionResult> DeleteBook(int id)
+    {
+        try
+        {
+            // Step 1: Fetch all reviews associated with the bookId
+            var reviews = _context.Reviews.Where(r => r.BookId == id);
+
+            // Step 2: Delete the associated reviews
+            _context.Reviews.RemoveRange(reviews);
+
+            // Step 3: Delete the book itself
+            var book = new Book { BookId = id }; // Create a stub entity with only the ID
+            _context.Books.Attach(book); // Attach the stub to the context
+            _context.Books.Remove(book);
+
+            // Step 4: Save changes
+            await _context.SaveChangesAsync();
+
+            // Return success response
+            return Json(new { success = true, message = "Book and associated reviews deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+    
+    
     [HttpGet]
     public async Task<IActionResult> Store(string searchQuery = null, string genre = null)
     {
         string username = HttpContext.Session.GetString("Username");
         ViewBag.Username = username;
-
+        
+        ViewBag.Role = 0;
+        if (username != null)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (user.Role == UserRole.Admin)
+            {
+                ViewBag.Role = 1;
+            }
+        }
+        
         var query = _context.Books.AsQueryable();
 
         if (!string.IsNullOrEmpty(searchQuery))
@@ -300,8 +402,7 @@ public class BookController : Controller
     ///////////////////////
     [HttpPost]
     public async Task<IActionResult> BuyBook([FromBody] int bookId)
-    {   
-        //int x = bookId;
+    {  
         string username = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(username))
         {
@@ -335,7 +436,7 @@ public class BookController : Controller
 
         await _context.SaveChangesAsync();
         
-        return View("BookStore"); 
+        return Json(new { success = true, message = "Book successfully added to cart!" });
     }
 
     public async Task<IActionResult> BorrowBook([FromBody] int bookId)
@@ -378,12 +479,11 @@ public class BookController : Controller
             book.AvailableCopies--;
             user.MaxBorrowed++;
             await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Book successfully added to cart!" });
         }
         else
         {
             return Json(new { success = false, message = "You have reached the maximum limit of 3 borrowed books." });
         }
-
-        return View("BookStore"); 
     }
 }

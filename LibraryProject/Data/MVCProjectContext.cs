@@ -23,6 +23,7 @@ namespace LibraryProject.Data
             modelBuilder.HasDefaultSchema("PERSTIN");
             
             modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "PERSTIN").StartsAt(0).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("BOOKS_SEQ", schema: "PERSTIN").StartsAt(8).IncrementsBy(1);
             
             modelBuilder.Entity<User>(entity =>
             {

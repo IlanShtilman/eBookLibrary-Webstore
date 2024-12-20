@@ -6,6 +6,11 @@
             {
                 <a asp-action="ViewBook" asp-route-id="@ViewBag.PrevBookId" class="nav-link">← Previous Book</a>
             }
+            @if (ViewBag.Role == 1)
+            {
+                <button id="deleteBookBtn" class="btn btn-danger">Delete Book</button>
+            }
+            <a asp-action="Index" asp-controller="Home" class="btn btn-primary">Return Home</a>
             @if (ViewBag.NextBookId != null)
             {
                 <a asp-action="ViewBook" asp-route-id="@ViewBag.NextBookId" class="nav-link">Next Book →</a>
@@ -57,7 +62,90 @@
         </div>
     </div>
 </div>
+@if (ViewBag.Role == 1)
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                    
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this book? This action cannot be undone and will also delete all associated reviews.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="cancelButton">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 @section Styles {
     <link rel="stylesheet" href="~/css/ordered-books.css" />
     <link rel="stylesheet" href="~/css/review.css" />
+}
+@section Scripts {
+    @if (ViewBag.Role == 1)
+    {
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Using vanilla JavaScript as a fallback in case jQuery isn't loaded
+                var deleteBtn = document.getElementById('deleteBookBtn');
+                var confirmBtn = document.getElementById('confirmDelete');
+                var modal = document.getElementById('deleteConfirmModal');
+                var cancelBtn = document.getElementById('cancelButton');
+                
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function() {
+                        // First try with jQuery if available
+                        if (typeof $ !== 'undefined') {
+                            $('#deleteConfirmModal').modal('show');
+                        } else {
+                            // Fallback to Bootstrap's native JavaScript
+                            var bootstrapModal = new bootstrap.Modal(modal);
+                            bootstrapModal.show();
+                        }
+                    });
+                }
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        fetch('@Url.Action("DeleteBook", "Book", new { id = Model.BookId })', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    window.location.href = '/Book/ViewBook';
+                                } else {
+                                    alert("Error deleting book: " + result.message);
+                                }
+                            })
+                            .catch(error => {
+                                alert("An error occurred while deleting the book.");
+                                console.error('Error:', error);
+                            });
+                    });
+                }
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        // First try with jQuery if available
+                        if (typeof $ !== 'undefined') {
+                            $('#deleteConfirmModal').modal('hide');
+                        } else {
+                            // Fallback to Bootstrap's native JavaScript
+                            var bootstrapModal = bootstrap.Modal.getInstance(modal);
+                            if (bootstrapModal) {
+                                bootstrapModal.hide();
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+    }
 }
