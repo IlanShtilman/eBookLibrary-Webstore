@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const minPriceInput = document.getElementById('minPrice');
     const maxPriceInput = document.getElementById('maxPrice');
     const publishYearInput = document.getElementById('publishYear');
-    
+
     // Filter state
     let currentFilters = {
         genre: 'all',
@@ -69,13 +69,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const isInWishlist = currentWishlistItems.includes(book.bookId);
             const heartClass = isInWishlist ? "fas active" : "far";
 
-            // Create the price display section with discount logic
             const priceDisplay = book.isOnDiscount
                 ? `<p class="price">Buy: 
-                 <span class="original-price text-decoration-line-through">$${book.buyPrice.toFixed(2)}</span>
-                 <span class="discounted-price">$${book.discountedBuyPrice.toFixed(2)}</span>
-                 <small class="discount-timer">Sale ends: ${new Date(book.discountEndDate).toLocaleDateString()}</small>
-               </p>`
+                     <span class="original-price text-decoration-line-through">$${book.buyPrice.toFixed(2)}</span>
+                     <span class="discounted-price">$${book.discountedBuyPrice.toFixed(2)}</span>
+                     <small class="discount-timer">Sale ends: ${new Date(book.discountEndDate).toLocaleDateString()}</small>
+                   </p>`
                 : `<p class="price">Buy: $${book.buyPrice.toFixed(2)}</p>`;
 
             const bookCard = `
@@ -185,6 +184,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function showMessage(element, message, isSuccess) {
+        const existingMessages = document.querySelectorAll('.success-message, .error-message');
+        existingMessages.forEach(msg => msg.remove());
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isSuccess ? 'success-message' : 'error-message';
+        messageDiv.textContent = message;
+
+        const parentCard = element.closest('.sf-product-card__content');
+        if (parentCard) {
+            const actionsDiv = parentCard.querySelector('.sf-product-card__actions');
+            if (actionsDiv) {
+                actionsDiv.insertAdjacentElement('afterend', messageDiv);
+            }
+        }
+
+        setTimeout(() => {
+            if (messageDiv && messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 3000);
+
+        const handleClickOutside = (e) => {
+            if (!messageDiv.contains(e.target) && !element.contains(e.target)) {
+                messageDiv.remove();
+                document.removeEventListener('click', handleClickOutside);
+            }
+        };
+
+        setTimeout(() => {
+            document.addEventListener('click', handleClickOutside);
+        }, 100);
+    }
+
     function setupActionButtonListeners() {
         // Wishlist handlers
         document.querySelectorAll('.sf-product-card__wishlist').forEach(wishlistElement => {
@@ -236,10 +269,11 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.dataset.bookId;
                 try {
+                    console.log('Sending buy request for book ID:', bookId);
                     const response = await fetch('/Book/BuyBook', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(bookId)
                     });
@@ -249,13 +283,32 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    if (response.ok) {
+                    const result = await response.json();
+                    console.log('Server response:', result);
+
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = result.success ? 'success-message' : 'error-message';
+                    messageDiv.textContent = result.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.zIndex = '9999';
+
+                    document.body.appendChild(messageDiv);
+
+                    setTimeout(() => {
+                        if (messageDiv && messageDiv.parentNode) {
+                            messageDiv.remove();
+                        }
+                    }, 3000);
+
+                    if (result.success) {
                         filterBooks();
-                    } else if (response.status === 401) {
-                        window.location.href = '/User/Login';
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    showMessage(this, 'You must be logged in to buy a book.', false);
                 }
             });
         });
@@ -265,10 +318,11 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.getAttribute('data-book-id');
                 try {
+                    console.log('Sending borrow request for book ID:', bookId);
                     const response = await fetch('/Book/BorrowBook', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(bookId)
                     });
@@ -280,41 +334,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const result = await response.json();
 
-                    if (!result.success) {
-                        let errorDiv = document.querySelector('.error-message');
-                        if (!errorDiv) {
-                            errorDiv = document.createElement('div');
-                            errorDiv.className = 'error-message';
-                            this.closest('.sf-product-card__actions').insertAdjacentElement('afterend', errorDiv);
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = result.success ? 'success-message' : 'error-message';
+                    messageDiv.textContent = result.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.zIndex = '9999';
+
+                    document.body.appendChild(messageDiv);
+
+                    setTimeout(() => {
+                        if (messageDiv && messageDiv.parentNode) {
+                            messageDiv.remove();
                         }
-                        errorDiv.textContent = result.message;
+                    }, 3000);
 
-                        const hideError = (e) => {
-                            if (!errorDiv.contains(e.target) && !this.contains(e.target)) {
-                                errorDiv.remove();
-                                document.removeEventListener('click', hideError);
-                            }
-                        };
-
-                        setTimeout(() => {
-                            document.addEventListener('click', hideError);
-                        }, 100);
-
-                        setTimeout(() => {
-                            if (errorDiv && errorDiv.parentNode) {
-                                errorDiv.remove();
-                                document.removeEventListener('click', hideError);
-                            }
-                        }, 3000);
-                    } else {
-                        const errorDiv = document.querySelector('.error-message');
-                        if (errorDiv) {
-                            errorDiv.remove();
-                        }
-                        window.location.reload();
+                    if (result.success) {
+                        filterBooks();
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    showMessage(this, 'You must be logged in to borrow a book.', false);
                 }
             });
         });
@@ -327,4 +369,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial load
     filterBooks();
+
+    // Navigation button handlers
+    const viewBookNavBtn = document.getElementById('viewBookNavBtn');
+    const addBookNavBtn = document.getElementById('addBookNavBtn');
+
+    if (viewBookNavBtn) {
+        viewBookNavBtn.addEventListener('click', function(event) {
+            // Add your navigation logic here
+        });
+    }
 });
+    

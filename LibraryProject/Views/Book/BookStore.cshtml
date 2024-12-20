@@ -21,7 +21,11 @@
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                 <li><a asp-controller="About" asp-action="Index">Profile</a></li>
                 <li><a asp-controller="Book" asp-action="Store">Store</a></li>
-                <li><a asp-controller="Home" asp-action="Index">Contact</a></li>
+                <li><a asp-controller="Book" asp-action="ViewBook" id="viewBookNavBtn">View Books</a></li>
+                @if (ViewBag.Role == 1)
+                {
+                    <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
+                }
             </ul>
             <div class="nav-icons">
                 @if (string.IsNullOrEmpty(username))
@@ -194,9 +198,9 @@
         <div class="sf-product-card__actions">
             @if (book.IsAvailableToBuy)
             {
-                <button class="buy-btn @(book.AvailableCopies <= 0 ? "disabled" : "")"
+                <button class="buy-btn"
                         data-book-id="@book.BookId"
-                        @(book.AvailableCopies <= 0 ? "disabled" : "")>
+                        >
                     Buy
                 </button>
             }
@@ -213,6 +217,12 @@
         {
             <div class="error-message">
                 @TempData["ErrorMessage"]
+            </div>
+        }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="success-message">
+                @TempData["SuccessMessage"]
             </div>
         }
     </div>

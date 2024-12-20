@@ -14,7 +14,11 @@
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                 <li><a asp-controller="About" asp-action="Index">Profile</a></li>
                 <li><a asp-controller="Book" asp-action="Store">Store</a></li>
-                <li><a asp-controller="Home" asp-action="Index">Contact</a></li>
+                <li><a asp-controller="Book" asp-action="ViewBook" id="viewBookNavBtn">View Books</a></li>
+                @if (ViewBag.Role == 1)
+                {
+                    <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
+                }
             </ul>
             <div class="nav-icons">
                 <div class="nav-icons">
@@ -355,4 +359,21 @@ function openAboutTab(evt, tabName) {
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var viewBookNavBtn = document.getElementById('viewBookNavBtn');
+    var addBookNavBtn = document.getElementById('viewBookNavBtn');
+    if (viewBookNavBtn) {
+        viewBookNavBtn.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default link behavior
+            window.location.href = '/Book/ViewBook'; // Redirect to the desired URL
+        });
+    }
+    if (addBookNavBtn) {
+        viewBookNavBtn.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default link behavior
+            window.location.href = '/Book/AddBook'; // Redirect to the desired URL
+        });
+    }
+});
 </script>

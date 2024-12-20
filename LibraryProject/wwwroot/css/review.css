@@ -171,3 +171,35 @@
         flex-direction: column;
     }
 }
+
+
+.book-navigation .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin: 0 10px;
+}
+
+.book-navigation .btn-danger:hover {
+    background-color: #c82333;
+}
+
+
+.fixed-home-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+.fixed-home-btn:hover {
+    background-color: #0056b3;
+    color: white;
+}
