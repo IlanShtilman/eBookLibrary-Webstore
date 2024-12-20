@@ -1,6 +1,6 @@
-
-// Filter Section
+// Main initialization - this should be at the root level
 document.addEventListener('DOMContentLoaded', function() {
+    // Element selections
     const searchInput = document.querySelector('.sf-search__input');
     const searchButton = document.querySelector('.sf-search__button');
     const filterButtons = document.querySelectorAll('.sf-filter__btn');
@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const minPriceInput = document.getElementById('minPrice');
     const maxPriceInput = document.getElementById('maxPrice');
     const publishYearInput = document.getElementById('publishYear');
-
+    
+    // Filter state
     let currentFilters = {
         genre: 'all',
         searchQuery: '',
@@ -17,9 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
         minPrice: null,
         maxPrice: null,
         publishYear: null,
-        ageRestriction: null
+        ageRestriction: null,
+        onlyDiscounted: false
     };
 
+    // Core filtering function
     async function filterBooks() {
         try {
             const queryParams = new URLSearchParams({
@@ -29,13 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 minPrice: currentFilters.minPrice || '',
                 maxPrice: currentFilters.maxPrice || '',
                 publishYear: currentFilters.publishYear || '',
-                ageRestriction: currentFilters.ageRestriction || ''
+                ageRestriction: currentFilters.ageRestriction || '',
+                onlyDiscounted: currentFilters.onlyDiscounted
             });
+            console.log('Query params:', queryParams.toString());
             const response = await fetch(`/Book/FilterBooks?${queryParams}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             const books = await response.json();
+            console.log('Received books:', books);
             updateBookDisplay(books);
         } catch (error) {
             console.error('Error:', error);
@@ -52,8 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateBookDisplay(books) {
         const productsContainer = document.querySelector('.sf-products');
         const bookCount = document.querySelector('.book-count');
-
-        // Get current wishlist items from the page
         const currentWishlistItems = Array.from(document.querySelectorAll('.sf-product-card__wishlist'))
             .filter(item => item.querySelector('.fa-heart.fas'))
             .map(item => parseInt(item.dataset.bookId));
@@ -61,19 +65,27 @@ document.addEventListener('DOMContentLoaded', function() {
         productsContainer.innerHTML = '';
         bookCount.textContent = `Showing ${books.length} books`;
 
-        if (books.length === 0) {
-            productsContainer.innerHTML = '<div class="no-results">No books found</div>';
-            return;
-        }
-
         books.forEach(book => {
             const isInWishlist = currentWishlistItems.includes(book.bookId);
             const heartClass = isInWishlist ? "fas active" : "far";
 
+            // Create the price display section with discount logic
+            const priceDisplay = book.isOnDiscount
+                ? `<p class="price">Buy: 
+                 <span class="original-price text-decoration-line-through">$${book.buyPrice.toFixed(2)}</span>
+                 <span class="discounted-price">$${book.discountedBuyPrice.toFixed(2)}</span>
+                 <small class="discount-timer">Sale ends: ${new Date(book.discountEndDate).toLocaleDateString()}</small>
+               </p>`
+                : `<p class="price">Buy: $${book.buyPrice.toFixed(2)}</p>`;
+
             const bookCard = `
             <div class="sf-product-card ${book.genre}" data-year="${book.publishYear}" data-age="${book.ageRestriction}">
                 <div class="sf-product-card__image-wrapper">
-                    <img class="sf-product-card__image" src="/images/book-placeholder.jpg" alt="${book.title}" />
+                    <img class="sf-product-card__image" 
+                         src="${book.imageUrl ? `/images/BookCovers/${book.imageUrl}` : '/images/book-placeholder.jpg'}"
+                         alt="${book.title}"
+                         onerror="this.onerror=null; this.src='/images/book-placeholder.jpg';"
+                    />
                     <div class="sf-product-card__wishlist" data-book-id="${book.bookId}">
                         <i class="fa-heart ${heartClass}"></i>
                     </div>
@@ -81,43 +93,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${book.availableCopies} borrow copies left
                     </div>
                 </div>
-                    <div class="sf-product-card__content">
-                        <h5 class="sf-product-card__title">${book.title}</h5>
-                        <p class="sf-product-card__author">by ${book.author}</p>
-                        <p class="sf-product-card__year">Published: ${book.publishYear}</p>
-                        <p class="sf-product-card__age">Age: ${book.ageRestriction}</p>
-                        <div class="sf-product-card__formats">
-                            ${book.isEpubAvailable ? '<span class="format-badge">EPUB</span>' : ''}
-                            ${book.isPdfAvailable ? '<span class="format-badge">PDF</span>' : ''}
-                            ${book.isMobiAvailable ? '<span class="format-badge">MOBI</span>' : ''}
-                            ${book.isF2bAvailable ? '<span class="format-badge">F2B</span>' : ''}
-                        </div>
-                        <div class="sf-product-card__prices">
-                            <p class="price">Buy: $${book.buyPrice}</p>
-                            <p class="price">Borrow: $${book.borrowPrice}</p>
-                        </div>
-                        <div class="sf-product-card__actions">
-                            ${book.isAvailableToBuy ?
-                `<button class="buy-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
-                                    data-book-id="${book.bookId}" 
-                                    ${book.availableCopies <= 0 ? 'disabled' : ''}>
-                                    Buy
-                                </button>` : ''}
-                            ${book.isAvailableToBorrow && book.availableCopies > 0 ?
-                `<button class="borrow-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
-                                    data-book-id="${book.bookId}" 
-                                    ${book.availableCopies <= 0 ? 'disabled' : ''}>
-                                    Borrow
-                                </button>` : ''}
-                        </div>
+                <div class="sf-product-card__content">
+                    <h5 class="sf-product-card__title">${book.title}</h5>
+                    <p class="sf-product-card__author">by ${book.author}</p>
+                    <p class="sf-product-card__year">Published: ${book.publishYear}</p>
+                    <p class="sf-product-card__age">Age: ${book.ageRestriction}</p>
+                    <div class="sf-product-card__formats">
+                        ${book.isEpubAvailable ? '<span class="format-badge">EPUB</span>' : ''}
+                        ${book.isPdfAvailable ? '<span class="format-badge">PDF</span>' : ''}
+                        ${book.isMobiAvailable ? '<span class="format-badge">MOBI</span>' : ''}
+                        ${book.isF2bAvailable ? '<span class="format-badge">F2B</span>' : ''}
+                    </div>
+                    <div class="sf-product-card__prices">
+                        ${priceDisplay}
+                        <p class="price">Borrow: $${book.borrowPrice.toFixed(2)}</p>
+                    </div>
+                    <div class="sf-product-card__actions">
+                        ${book.isAvailableToBuy
+                ? `<button class="buy-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
+                                       data-book-id="${book.bookId}" 
+                                       ${book.availableCopies <= 0 ? 'disabled' : ''}>
+                                 Buy
+                               </button>`
+                : ''}
+                        ${book.isAvailableToBorrow && book.availableCopies > 0
+                ? `<button class="borrow-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
+                                       data-book-id="${book.bookId}" 
+                                       ${book.availableCopies <= 0 ? 'disabled' : ''}>
+                                 Borrow
+                               </button>`
+                : ''}
                     </div>
                 </div>
-            `;
+            </div>`;
             productsContainer.innerHTML += bookCard;
         });
+
         setupActionButtonListeners();
     }
-    // Event Listeners
+
+    // All event listeners
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentFilters.genre = button.dataset.genre;
@@ -140,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     sortSelect.addEventListener('change', () => {
         currentFilters.sortBy = sortSelect.value;
+        currentFilters.onlyDiscounted = (sortSelect.value === 'on_sale');
         filterBooks();
     });
 
@@ -163,79 +179,19 @@ document.addEventListener('DOMContentLoaded', function() {
         filterBooks();
     });
 
-    // Initial load
-    filterBooks();
-
-    
-    //WishList add/remove
-    document.querySelectorAll('.add-to-wishlist').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const bookId = e.currentTarget.dataset.bookId;
-            const heartIcon = e.currentTarget.querySelector('.fa-heart');
-
-            try {
-                if (heartIcon.classList.contains('far')) {
-                    // Book is not in wishlist, so add it
-                    await addToWishlist(bookId);
-                    heartIcon.classList.remove('far');
-                    heartIcon.classList.add('fas', 'active');
-                } else {
-                    // Book is in wishlist, so remove it
-                    await removeFromWishlist(bookId);
-                    heartIcon.classList.remove('fas', 'active');
-                    heartIcon.classList.add('far');
-                }
-            } catch (error) {
-                console.error('Error updating wishlist:', error);
-                // Handle error, e.g., display a message to the user
-            }
-        });
-    });
-
-    async function addToWishlist(bookId) {
-        const response = await fetch('/Book/AddToWishlist', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ bookId })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}`);
-        }
-    }
-
-    async function removeFromWishlist(bookId) {
-        const response = await fetch('/Book/RemoveFromWishlist', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ bookId })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}`);
+    function handleAuthRequired(element) {
+        if (confirm('Please log in to continue. Would you like to go to the login page?')) {
+            window.location.href = '/User/Login';
         }
     }
 
     function setupActionButtonListeners() {
-        // Add wishlist click handlers
+        // Wishlist handlers
         document.querySelectorAll('.sf-product-card__wishlist').forEach(wishlistElement => {
             wishlistElement.addEventListener('click', async function(event) {
                 const bookId = parseInt(this.dataset.bookId);
-                console.log('Raw bookId from dataset:', bookId);
-                console.log('Type of bookId:', typeof bookId);
-
-                // Parse bookId to number since it comes as string from dataset
-                const parsedBookId = parseInt(bookId, 10);
-                console.log('Parsed bookId:', parsedBookId);
-
                 const heartIcon = this.querySelector('.fa-heart');
                 const isInWishlist = heartIcon.classList.contains('fas');
-                console.log('Is in wishlist:', isInWishlist);
 
                 try {
                     if (isInWishlist) {
@@ -250,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (response.ok) {
                             heartIcon.classList.remove('fas', 'active');
                             heartIcon.classList.add('far');
-                            console.log('Successfully removed from wishlist');
                         } else if (response.status === 401) {
                             window.location.href = '/User/Login';
                         }
@@ -266,7 +221,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (response.ok) {
                             heartIcon.classList.remove('far');
                             heartIcon.classList.add('fas', 'active');
-                            console.log('Successfully added to wishlist');
                         } else if (response.status === 401) {
                             window.location.href = '/User/Login';
                         }
@@ -277,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Buy button listeners
+        // Buy button handlers
         document.querySelectorAll('.buy-btn:not(.disabled)').forEach(button => {
             button.addEventListener('click', async function() {
                 const bookId = this.dataset.bookId;
@@ -290,8 +244,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         body: JSON.stringify(bookId)
                     });
 
+                    if (response.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
+
                     if (response.ok) {
-                        filterBooks(); // Refresh the display
+                        filterBooks();
                     } else if (response.status === 401) {
                         window.location.href = '/User/Login';
                     }
@@ -301,11 +260,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Borrow button listeners
+        // Borrow button handlers
         document.querySelectorAll('.borrow-btn').forEach(button => {
             button.addEventListener('click', async function() {
                 const bookId = this.getAttribute('data-book-id');
-
                 try {
                     const response = await fetch('/Book/BorrowBook', {
                         method: 'POST',
@@ -315,10 +273,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         body: JSON.stringify(bookId)
                     });
 
+                    if (response.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
+
                     const result = await response.json();
 
                     if (!result.success) {
-                        // Create or update error message div
                         let errorDiv = document.querySelector('.error-message');
                         if (!errorDiv) {
                             errorDiv = document.createElement('div');
@@ -327,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         errorDiv.textContent = result.message;
 
-                        // Keep the error message visible until user clicks somewhere else
                         const hideError = (e) => {
                             if (!errorDiv.contains(e.target) && !this.contains(e.target)) {
                                 errorDiv.remove();
@@ -335,10 +296,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         };
 
-                        // Add click listener after a small delay to prevent immediate dismissal
                         setTimeout(() => {
                             document.addEventListener('click', hideError);
                         }, 100);
+
                         setTimeout(() => {
                             if (errorDiv && errorDiv.parentNode) {
                                 errorDiv.remove();
@@ -346,12 +307,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }, 3000);
                     } else {
-                        // Remove error message if exists and success
                         const errorDiv = document.querySelector('.error-message');
                         if (errorDiv) {
                             errorDiv.remove();
                         }
-                        // Refresh the page on success
                         window.location.reload();
                     }
                 } catch (error) {
@@ -366,5 +325,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    
+    // Initial load
+    filterBooks();
 });

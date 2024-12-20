@@ -119,6 +119,7 @@
                 <option value="year_desc">Newest First</option>
                 <option value="year_asc">Oldest First</option>
                 <option value="popular">Most Popular</option>
+                <option value="on_sale">On Sale Only</option>
             </select>
         </div>
         <div class="sf-filter">
@@ -149,6 +150,8 @@
                 <label>Publication Year:</label>
                 <input type="number" id="publishYear" placeholder="Year" class="sf-filter__input" />
             </div>
+            <div class="filter-group">
+            </div>
         </div>
         
     @* Showing books and deatils *@
@@ -156,9 +159,11 @@
         @foreach (var book in Model)
         {
             <div class="sf-product-card @book.Genre" data-year="@book.PublishYear" data-age="@book.AgeRestriction">
-    <div class="sf-product-card__image-wrapper">
-        <img class="sf-product-card__image" src="~/images/book-placeholder.jpg" alt="@book.Title" />
-        <div class="sf-product-card__wishlist" data-book-id="@book.BookId">
+            <div class="sf-product-card__image-wrapper">
+                <img class="sf-product-card__image"
+                     src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/Bookcovers/{book.ImageUrl}")"
+                     alt="@book.Title" />
+            <div class="sf-product-card__wishlist" data-book-id="@book.BookId">
             <i class="fa-heart @(ViewBag.Wishlist?.Contains(book.BookId) == true ? "fas active" : "far")"></i>
             
         </div>
@@ -167,14 +172,23 @@
         </div>
     </div>
     <div class="sf-product-card__content">
-        @* Verify these book properties match your Book model *@
         <h5 class="sf-product-card__title">@book.Title</h5>
         <p class="sf-product-card__author">by @book.Author</p>
         <p class="sf-product-card__year">Published: @book.PublishYear</p>
         <p class="sf-product-card__age">Age: @book.AgeRestriction</p>
         <div class="sf-product-card__prices">
-            @* Add ToString("F2") to ensure proper price formatting *@
-            <p class="price">Buy: $@book.BuyPrice.ToString("F2")</p>
+            @if (book.IsOnDiscount)
+            {
+                <p class="price">
+                    Buy: <span class="original-price text-decoration-line-through">$@book.BuyPrice.ToString("F2")</span>
+                    <span class="discounted-price">$@book.DiscountedBuyPrice?.ToString("F2")</span>
+                    <small class="discount-timer">Sale ends: @book.DiscountEndDate?.ToString("MM/dd/yyyy")</small>
+                </p>
+            }
+            else
+            {
+                <p class="price">Buy: $@book.BuyPrice.ToString("F2")</p>
+            }
             <p class="price">Borrow: $@book.BorrowPrice.ToString("F2")</p>
         </div>
         <div class="sf-product-card__actions">

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using LibraryProject.Data.Enums;
 
 namespace LibraryProject.Models;
@@ -20,17 +21,30 @@ public class Book
     public int AvailableCopies { get; set; }
     public double BorrowPrice { get; set; }
     public double BuyPrice { get; set; }
-    //public decimal? DiscountPrice { get; set; }
-    //public DateTime? DiscountStartDate { get; set; }
-    //public DateTime? DiscountEndDate { get; set; }
+    public double? DiscountedBuyPrice { get; set; }
+    public DateTime? DiscountStartDate { get; set; } 
+    public DateTime? DiscountEndDate { get; set; }
     
-    /// CHECK IT!!!!
     public bool IsEpubAvailable { get; set; }
     public bool IsF2bAvailable { get; set; }
     public bool IsMobiAvailable { get; set; }
     public bool IsPdfAvailable { get; set; }
     
+    public string? ImageUrl { get; set; }
+    
     //Relations
     //public ICollection<Review> Reviews { get; set; }
     //public ICollection<UserBook> BookUsers { get; set; }
+    
+    // These are computed properties - we don't store them in the database
+    [NotMapped]
+    public bool IsOnDiscount => 
+        DiscountedBuyPrice.HasValue && 
+        DiscountStartDate.HasValue && 
+        DiscountEndDate.HasValue &&
+        DateTime.Now >= DiscountStartDate.Value && 
+        DateTime.Now <= DiscountEndDate.Value;
+
+    [NotMapped]
+    public double CurrentBuyPrice => IsOnDiscount ? DiscountedBuyPrice.Value : BuyPrice;
 }

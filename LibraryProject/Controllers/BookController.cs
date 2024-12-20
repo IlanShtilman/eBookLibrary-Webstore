@@ -129,13 +129,18 @@ public class BookController : Controller
     {
         string username = HttpContext.Session.GetString("Username");
         ViewBag.Username = username;
-
+        
         var query = _context.Books.AsQueryable();
 
-        if (!string.IsNullOrEmpty(searchQuery))
-        {
-            query = query.Where(b => b.Title.Contains(searchQuery) || b.Author.Contains(searchQuery));
-        }
+        // Apply search query
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim().ToLower();
+                query = query.Where(b => 
+                    b.Title.ToLower().Contains(searchQuery) || 
+                    b.Author.ToLower().Contains(searchQuery) ||
+                    b.Publisher.ToLower().Contains(searchQuery));
+            }
 
         if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
         {
@@ -144,10 +149,17 @@ public class BookController : Controller
                 query = query.Where(b => b.Genre == genreEnum);
             }
         }
-
         var books = await query.ToListAsync();
-
-        // Retrieve the user's wishlist items
+        foreach(var book in books)
+        {
+            Console.WriteLine($"Book: {book.Title}");
+            Console.WriteLine($"Image path being used: /images/BookCovers/{book.ImageUrl}");
+            var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "BookCovers", book.ImageUrl ?? "");
+            Console.WriteLine($"Physical path: {physicalPath}");
+            Console.WriteLine($"File exists: {System.IO.File.Exists(physicalPath)}");
+            Console.WriteLine("-------------------");
+        }
+      
         var wishlistItems = string.IsNullOrEmpty(username)
             ? new List<int>()
             : await _context.Wishlist
@@ -234,91 +246,157 @@ public class BookController : Controller
     
     [HttpGet]
     public async Task<IActionResult> FilterBooks(
-        string genre = "all", 
-        string searchQuery = "", 
-        string sortBy = "",
-        decimal? minPrice = null,
-        decimal? maxPrice = null,
-        string author = "",
-        int? publishYear = null,
-        AgeRestriction? ageRestriction = null)
+    string genre = "all", 
+    string searchQuery = "", 
+    string sortBy = "",
+    decimal? minPrice = null,
+    decimal? maxPrice = null,
+    string author = "",
+    int? publishYear = null,
+    AgeRestriction? ageRestriction = null,
+    bool onlyDiscounted = false)
+{
+    var query = _context.Books.AsQueryable();
+
+    // Apply genre filter (if not "all")
+    if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
     {
-        var query = _context.Books.AsQueryable();
-        // Apply genre filter
-        if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
+        if (Enum.TryParse<Genre>(genre, true, out Genre genreEnum))
         {
-            if (Enum.TryParse<Genre>(genre, true, out Genre genreEnum))
-            {
-                query = query.Where(b => b.Genre == genreEnum);
-            }
+            query = query.Where(b => b.Genre == genreEnum);
         }
-        // Apply search query
-        if (!string.IsNullOrEmpty(searchQuery))
-        {
-            query = query.Where(b => 
-                b.Title.Contains(searchQuery) || 
-                b.Author.Contains(searchQuery));
-        }
-        // Apply author filter
-        if (!string.IsNullOrEmpty(author))
-        {
-            query = query.Where(b => b.Author.Contains(author));
-        }
-        // Apply price range filter
+    }
+
+    // Apply discount filter
+    if (onlyDiscounted)
+    {
+        var currentDate = DateTime.Now;
+        query = query.Where(b => 
+            b.DiscountedBuyPrice.HasValue && 
+            b.DiscountStartDate <= currentDate && 
+            b.DiscountEndDate >= currentDate);
+    }
+    
+    if (!string.IsNullOrWhiteSpace(searchQuery))
+    {
+        searchQuery = searchQuery.Trim().ToLower();
+        query = query.Where(b => 
+            b.Title.ToLower().Contains(searchQuery) || 
+            b.Author.ToLower().Contains(searchQuery) ||
+            b.Publisher.ToLower().Contains(searchQuery));
+    }
+
+    // Apply price range filter
+    if (minPrice.HasValue || maxPrice.HasValue)
+    {
+        Console.WriteLine($"Price range: {minPrice} - {maxPrice}"); // Debug log
         if (minPrice.HasValue)
         {
-            query = query.Where(b => b.BuyPrice >= (double)minPrice.Value);
+            query = query.Where(b => 
+                (b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice : b.BuyPrice) >= (double)minPrice.Value);
         }
         if (maxPrice.HasValue)
         {
-            query = query.Where(b => b.BuyPrice <= (double)maxPrice.Value);
+            query = query.Where(b => 
+                (b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice : b.BuyPrice) <= (double)maxPrice.Value);
         }
-        // Apply publish year filter
-        if (publishYear.HasValue)
-        {
-            query = query.Where(b => b.PublishYear == publishYear.Value);
-        }
-        // Apply age restriction filter
-        if (ageRestriction.HasValue)
-        {
-            query = query.Where(b => b.AgeRestriction == ageRestriction.Value);
-        }
-        // Apply sorting
-        query = sortBy?.ToLower() switch
-        {
-            "price_asc" => query.OrderBy(b => b.BuyPrice),
-            "price_desc" => query.OrderByDescending(b => b.BuyPrice),
-            "year_asc" => query.OrderBy(b => b.PublishYear),
-            "year_desc" => query.OrderByDescending(b => b.PublishYear),
-            "popular" => query.OrderByDescending(b => b.TotalCopies - b.AvailableCopies),
-            _ => query.OrderBy(b => b.Title)
-        };
-        var books = await query.ToListAsync();
-        return Json(books);
     }
 
-    ///////////////////////
+    // Apply age restriction filter
+    if (ageRestriction.HasValue)
+    {
+        query = query.Where(b => b.AgeRestriction == ageRestriction.Value);
+    }
+
+    // Apply publish year filter
+    if (publishYear.HasValue)
+    {
+        query = query.Where(b => b.PublishYear == publishYear.Value);
+    }
+
+    // Apply sorting
+    query = sortBy?.ToLower() switch
+    {
+        "price_asc" => query.OrderBy(b => 
+            b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice.Value : b.BuyPrice),
+        "price_desc" => query.OrderByDescending(b => 
+            b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice.Value : b.BuyPrice),
+        "on_sale" => query.Where(b => 
+            b.DiscountedBuyPrice.HasValue && 
+            b.DiscountStartDate <= DateTime.Now && 
+            b.DiscountEndDate >= DateTime.Now),
+        "year_asc" => query.OrderBy(b => b.PublishYear),
+        "year_desc" => query.OrderByDescending(b => b.PublishYear),
+        "popular" => query.OrderByDescending(b => b.TotalCopies - b.AvailableCopies),
+        _ => query.OrderBy(b => b.Title)
+    };
+
+    // Select all required properties
+    var books = await query.Select(b => new
+    {
+        b.BookId,
+        b.Title,
+        b.Author,
+        b.Publisher,
+        b.PublishYear,
+        b.Genre,
+        b.AgeRestriction,
+        b.IsAvailableToBuy,
+        b.IsAvailableToBorrow,
+        b.TotalCopies,
+        b.AvailableCopies,
+        b.BorrowPrice,
+        b.BuyPrice,
+        b.DiscountedBuyPrice,
+        b.DiscountStartDate,
+        b.DiscountEndDate,
+        b.IsEpubAvailable,
+        b.IsF2bAvailable,
+        b.IsMobiAvailable,
+        b.IsPdfAvailable,
+        b.ImageUrl,
+        IsOnDiscount = b.DiscountedBuyPrice.HasValue && 
+                      b.DiscountStartDate <= DateTime.Now && 
+                      b.DiscountEndDate >= DateTime.Now
+    }).ToListAsync();
+
+    Console.WriteLine($"Found {books.Count} books"); // Debug log
+    
+    return Json(books);
+}
+    
     [HttpPost]
     public async Task<IActionResult> BuyBook([FromBody] int bookId)
     {   
-        //int x = bookId;
         string username = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(username))
         {
-            // User is not logged in, redirect to the Login page
-            return RedirectToAction("Login", "User");
+            return Unauthorized();
         }
-        
+
+        // Check if book already exists in cart with any action
+        var existingInCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc => 
+            sc.BookId == bookId && 
+            sc.Username == username);
+
+        if (existingInCart != null)
+        {
+            return Json(new { success = false, message = "This book is already in your cart." });
+        }
+    
         var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
         var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 
             sc.BookId == book.BookId &&
             sc.Username == username &&
             sc.Action == "Buy");
 
+        // Get the current price (either discounted or original)
+        double currentPrice = book.IsOnDiscount ? book.DiscountedBuyPrice.Value : book.BuyPrice;
+
         if (ExistsShoppingCart != null)
         {
             ExistsShoppingCart.Quantity += 1;
-            ExistsShoppingCart.Price += book.BuyPrice;
+            ExistsShoppingCart.Price += currentPrice;  // Use the current price
         }
         else
         {
@@ -327,36 +405,50 @@ public class BookController : Controller
                 Username = username,
                 BookId = bookId,
                 Action = "Buy",
-                Quantity =  1,
-                Price = book.BuyPrice
+                Quantity = 1,
+                Price = currentPrice  
             };
             _context.ShoppingCarts.Add(shoppingCart);
         }
 
         await _context.SaveChangesAsync();
-        
+    
         return View("BookStore"); 
     }
 
+    [HttpPost]
     public async Task<IActionResult> BorrowBook([FromBody] int bookId)
     {   
-        //int x = bookId;
         string username = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(username))
         {
-            // User is not logged in, redirect to the Login page
-            return RedirectToAction("Login", "User");
+            return Unauthorized();
         }
-        
+
+        // Check if book already exists in cart with any action
+        var existingInCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc => 
+            sc.BookId == bookId && 
+            sc.Username == username);
+
+        if (existingInCart != null)
+        {
+            return Json(new { success = false, message = "This book is already in your cart." });
+        }
+    
         var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
-        var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 
-            sc.BookId == book.BookId &&
-            sc.Username == username &&
-            sc.Action == "Borrow");
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-        if (user.MaxBorrowed < 3)
+        // Count both current borrowed books and books in shopping cart marked for borrowing
+        var borrowedCount = await _context.ShoppingCarts
+            .CountAsync(sc => sc.Username == username && sc.Action == "Borrow");
+
+        if (borrowedCount < 3)
         {
+            var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 
+                sc.BookId == book.BookId &&
+                sc.Username == username &&
+                sc.Action == "Borrow");
+
             if (ExistsShoppingCart != null)
             {
                 ExistsShoppingCart.Quantity += 1;
@@ -376,14 +468,12 @@ public class BookController : Controller
             }
 
             book.AvailableCopies--;
-            user.MaxBorrowed++;
             await _context.SaveChangesAsync();
+            return View("BookStore");
         }
         else
         {
             return Json(new { success = false, message = "You have reached the maximum limit of 3 borrowed books." });
         }
-
-        return View("BookStore"); 
     }
 }

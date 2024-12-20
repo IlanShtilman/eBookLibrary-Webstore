@@ -31,7 +31,7 @@ namespace LibraryProject.Data
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
                 entity.Property(e => e.Email).HasColumnName("EMAIL");
-                entity.Property(e => e.FirstName).HasColumnName("FIRSTNAME");  // Note: FirstName maps to FIRSTNAME
+                entity.Property(e => e.FirstName).HasColumnName("FIRSTNAME"); 
                 entity.Property(e => e.LastName).HasColumnName("LASTNAME");
                 entity.Property(e => e.MaxBorrowed).HasColumnName("MAXBORROWED");
     
@@ -63,11 +63,14 @@ namespace LibraryProject.Data
                 entity.Property(e => e.AvailableCopies).HasColumnName("AVAILABLECOPIES");
                 entity.Property(e => e.IsAvailableToBuy).HasColumnName("ISAVAILABLETOBUY");
                 entity.Property(e => e.IsAvailableToBorrow).HasColumnName("ISAVAILABLETOBORROW");
-                // Fix these to match your database column names
                 entity.Property(e => e.IsEpubAvailable).HasColumnName("ISEPUB");
                 entity.Property(e => e.IsF2bAvailable).HasColumnName("ISF2B");
                 entity.Property(e => e.IsMobiAvailable).HasColumnName("ISMOBI");
                 entity.Property(e => e.IsPdfAvailable).HasColumnName("ISPDF");
+                entity.Property(e => e.DiscountedBuyPrice).HasColumnName("DISCOUNTEDBUYPRICE");
+                entity.Property(e => e.DiscountStartDate).HasColumnName("DISCOUNTSTARTDATE"); 
+                entity.Property(e => e.DiscountEndDate).HasColumnName("DISCOUNTENDDATE");
+                entity.Property(e => e.ImageUrl).HasColumnName("IMAGEURL");
             });
 
             modelBuilder.Entity<Review>(entity =>
