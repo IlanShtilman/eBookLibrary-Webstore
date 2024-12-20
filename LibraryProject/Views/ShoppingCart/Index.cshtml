@@ -74,10 +74,42 @@
                             <p class="book-author">by @item.Author</p>
                         </div>
                         <div class="quantity-controls">
-                            <select class="action-select" id="action-@item.BookId" onchange="updateAction(@item.BookId, this.value)">
-                                <option value="buy" selected="@(item.Action.ToLower() == "buy")">Buy</option>
-                                <option value="borrow" selected="@(item.Action.ToLower() == "borrow")">Borrow</option>
-                            </select>
+                            @if (item.IsAvailableToBuy && item.IsAvailableToBorrow)
+                            {
+                                <select class="action-select"
+                                        id="action-@item.BookId"
+                                        data-original-value="@item.Action.ToLower()"
+                                        onchange="updateAction(@item.BookId, this.value)">
+                                    @if (item.Action.ToLower() == "buy")
+                                    {
+                                        <option value="buy" selected>Buy</option>
+                                        <option value="borrow">Borrow</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="buy">Buy</option>
+                                        <option value="borrow" selected>Borrow</option>
+                                    }
+                                </select>
+                            }
+                            else if (item.IsAvailableToBuy)
+                            {
+                                <select class="action-select"
+                                        id="action-@item.BookId"
+                                        data-original-value="buy"
+                                        disabled>
+                                    <option value="buy" selected>Buy</option>
+                                </select>
+                            }
+                            else if (item.IsAvailableToBorrow)
+                            {
+                                <select class="action-select"
+                                        id="action-@item.BookId"
+                                        data-original-value="borrow"
+                                        disabled>
+                                    <option value="borrow" selected>Borrow</option>
+                                </select>
+                            }
                             <div class="quantity-wrapper">
                                 <button class="quantity-btn" onclick="updateQuantity(@item.BookId, -1)">
                                     <i class="fas fa-minus"></i>

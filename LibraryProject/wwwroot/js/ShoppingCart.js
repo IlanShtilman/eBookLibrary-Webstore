@@ -63,6 +63,9 @@ function removeItem(bookId) {
 }
 
 function updateAction(bookId, newAction) {
+    const selectElement = document.getElementById(`action-${bookId}`);
+    const originalValue = selectElement.dataset.originalValue; // Get original value
+
     fetch(`/ShoppingCart/UpdateAction?bookId=${bookId}&newAction=${newAction}`, {
         method: 'POST',
         headers: {
@@ -101,11 +104,19 @@ function updateAction(bookId, newAction) {
                     minusButton.disabled = false;
                     minusButton.classList.remove('disabled');
                 }
+
+                // Update the original value after successful change
+                selectElement.dataset.originalValue = newAction;
             } else {
-                // Revert selection if update failed
-                const selectElement = document.getElementById(`action-${bookId}`);
-                selectElement.value = data.currentAction;
-                alert('Could not update action. Please try again.');
+                // Revert to the original value stored in data-original-value
+                selectElement.value = originalValue;
+                alert(data.message || 'Could not update action. Please try again.');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert to the original value on error
+            selectElement.value = originalValue;
+            alert('An error occurred while updating the action. Please try again.');
         });
 }
