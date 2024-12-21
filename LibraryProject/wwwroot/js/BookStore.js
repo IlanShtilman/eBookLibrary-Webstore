@@ -110,10 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="sf-product-card__actions">
                         ${book.isAvailableToBuy
                 ? `<button class="buy-btn" 
-                                       data-book-id="${book.bookId}" 
-                                       >
-                                 Buy
-                               </button>`
+             data-book-id="${book.bookId}">
+             Buy
+           </button>`
                 : ''}
                         ${book.isAvailableToBorrow && book.availableCopies > 0
                 ? `<button class="borrow-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 

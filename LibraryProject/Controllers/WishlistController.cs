@@ -21,15 +21,43 @@ public class WishlistController : Controller
         string username = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(username))
         {
-            // User is not logged in, redirect to the Login page
             return RedirectToAction("Login", "User");
         }
 
+        ViewBag.Username = username;
+    
         var wishlists = await _context.Wishlist
             .Where(w => w.Username == username)
+            .Join(_context.Books,
+                w => w.BookId,
+                b => b.BookId,
+                (w, b) => b)
             .ToListAsync();
 
-        return View("Wishlist", wishlists);
+        return View("Wishlist", wishlists); 
     }
+    
+    [HttpPost]
+    public async Task<IActionResult> RemoveFromWishlist(int bookId)
+    {
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            return RedirectToAction("Login", "User");
+        }
+
+        // Find the wishlist entry
+        var wishlistItem = await _context.Wishlist
+            .FirstOrDefaultAsync(w => w.Username == username && w.BookId == bookId);
+
+        if (wishlistItem != null)
+        {
+            _context.Wishlist.Remove(wishlistItem);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+        return Json(new { success = false });
+    }
+    
 }
 

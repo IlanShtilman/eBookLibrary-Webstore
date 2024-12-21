@@ -1,11 +1,9 @@
-@model List<Wishlist>
+@model IEnumerable<LibraryProject.Models.Book>
 @{
     ViewData["Title"] = "WishList";
-}
-@{
     var username = ViewBag.Username;
 }
-
+<link rel="stylesheet" href="~/css/Wishlist.css" asp-append-version="true"/>
 <div id="header">
     <div class="container">
         <nav>
@@ -22,72 +20,135 @@
                 }
                 <li><a asp-controller="Book" asp-action="Store">Store</a></li>
                 <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
-                <i class="fas fa-times" onclick="closeMenu()"></i>
             </ul>
             <div class="nav-icons">
-                @if (username != null)
-                {
-                    <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
-                        <i class="fa-solid fa-heart"></i>
-                    </a>
-                }
-                else
-                {
-                    <a asp-controller="User" asp-action="Login" class="login-link">
-                        <i class="fa-solid fa-heart"></i>
-                    </a>
-                }
-                <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </a>
-                @if (!string.IsNullOrEmpty(username))
-                {
-                    <a asp-controller="User" asp-action="Logout" class="logout-link">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                }
-                else
-                {
-                    <a asp-controller="User" asp-action="Login" class="login-link">
-                        <i class="fas fa-user"></i>
-                    </a>
-                }
+                <div class="nav-icons">
+                    @if (!string.IsNullOrEmpty(username))
+                    {
+                        <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-heart"></i>
+                        </a>
+                        <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </a>
+                        <a asp-controller="User" asp-action="Logout" class="icon-link">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="User" asp-action="Login" class="icon-link">
+                            <i class="fa-solid fa-user"></i>
+                        </a>
+                    }
+                </div>
             </div>
-            <i class="fas fa-bars" onclick="openMenu()"></i>
         </nav>
     </div>
 </div>
-<div class="container my-5">
-    <h1>My Wishlist</h1>
 
-    @if (Model.Count == 0)
+<div class="wishlist-container">
+    <div class="wishlist-header">
+        <h1>My Wishlist</h1>
+        <span class="items-count">@Model.Count() items</span>
+    </div>
+
+    @if (!Model.Any())
     {
-        <p>Your wishlist is empty.</p>
+        <div class="empty-wishlist">
+            <i class="fa-solid fa-heart-crack"></i>
+            <p>Your wishlist is empty</p>
+            <a asp-controller="Book" asp-action="Store" class="browse-books-btn">Browse Books</a>
+        </div>
     }
     else
     {
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Book ID</th>
-                <th>Username</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
+        <div class="wishlist-grid">
+            @foreach (var book in Model)
             {
-                <tr>
-                    <td>@item.BookId</td>
-                    <td>@item.Username</td>
-                </tr>
+                <div class="wishlist-card" data-book-id="@book.BookId">
+                    <div class="wishlist-card__image-wrapper">
+                        <img class="wishlist-card__image"
+                             src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/BookCovers/{book.ImageUrl}")"
+                             alt="@book.Title" />
+                    </div>
+                    <div class="wishlist-card__content">
+                        <h3 class="wishlist-card__title">@book.Title</h3>
+                        <p class="wishlist-card__author">by @book.Author</p>
+                        <p class="wishlist-card__publisher">Publisher: @book.Publisher</p>
+                        <p class="wishlist-card__year">Published: @book.PublishYear</p>
+
+                        <div class="format-badges">
+                            @if (book.IsEpubAvailable)
+                            {
+                                <span class="format-badge">EPUB</span>
+                            }
+                            @if (book.IsPdfAvailable)
+                            {
+                                <span class="format-badge">PDF</span>
+                            }
+                            @if (book.IsMobiAvailable)
+                            {
+                                <span class="format-badge">MOBI</span>
+                            }
+                            @if (book.IsF2bAvailable)
+                            {
+                                <span class="format-badge">F2B</span>
+                            }
+                        </div>
+
+                        <div class="wishlist-card__prices">
+                            @if (book.IsOnDiscount)
+                            {
+                                <p class="price">
+                                    <span class="original-price">$@book.BuyPrice.ToString("F2")</span>
+                                    <span class="discounted-price">$@book.DiscountedBuyPrice?.ToString("F2")</span>
+                                    <span class="discount-timer">Sale ends: @book.DiscountEndDate?.ToString("MM/dd")</span>
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="price">$@book.BuyPrice.ToString("F2")</p>
+                            }
+                            @if (book.IsAvailableToBorrow)
+                            {
+                                <p class="price">Borrow: $@book.BorrowPrice.ToString("F2")</p>
+                            }
+                        </div>
+
+                        <div class="wishlist-card__actions">
+                            <div class="action-buttons">
+                                @if (book.IsAvailableToBorrow)
+                                {
+                                    <button class="add-to-cart-btn" onclick="addToCart(@book.BookId, 'borrow')">
+                                        <i class="fa-solid fa-cart-plus"></i>
+                                        Borrow Now
+                                    </button>
+                                }
+                                @if (book.IsAvailableToBuy)
+                                {
+                                    <button class="add-to-cart-btn" onclick="addToCart(@book.BookId, 'buy')">
+                                        <i class="fa-solid fa-cart-plus"></i>
+                                        Buy Now
+                                    </button>
+                                }
+                            </div>
+                            <button class="remove-btn" onclick="removeFromWishlist(@book.BookId)">
+                                <i class="fa-solid fa-trash"></i>
+                                Remove from Wishlist
+                            </button>
+                        </div>
+                    </div>
+                </div>
             }
-            </tbody>
-        </table>
+        </div>
     }
 </div>
+
 <div class="CR">
     <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
 </div>
-@section Styles {
-    <link rel="stylesheet" href="~/css/Wishlist.css" />
+
+@section Scripts {
+<script src="~/js/Wishlist.js" asp-append-version="true"></script>
 }
