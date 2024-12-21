@@ -26,6 +26,8 @@ function updateQuantity(bookId, change) {
                 document.querySelector('.summary-item.total-row span:last-child').textContent = `$${data.newTotal.toFixed(2)}`;
                 document.querySelector('.checkout-btn span:first-child').textContent = `$${data.newTotal.toFixed(2)}`;
 
+                document.getElementById('totalAmount').value = data.newTotal.toFixed(2);
+                
                 // Update cart item count
                 document.querySelector('.NumberItems').textContent = `You have ${data.itemCount} items in your cart`;
             }
@@ -54,6 +56,7 @@ function removeItem(bookId) {
                             .textContent = `$${data.newTotal.toFixed(2)}`;
                         document.querySelector('.checkout-btn span:first-child')
                             .textContent = `$${data.newTotal.toFixed(2)}`;
+                        document.getElementById('totalAmount').value = data.newTotal.toFixed(2);
                         document.querySelector('.NumberItems')
                             .textContent = `You have ${data.itemCount} items in your cart`;
                     }, 300); // Match this to your animation duration
@@ -86,6 +89,8 @@ function updateAction(bookId, newAction) {
                 document.querySelector('.summary-item:first-child span:last-child').textContent = `$${data.newSubtotal.toFixed(2)}`;
                 document.querySelector('.summary-item.total-row span:last-child').textContent = `$${data.newTotal.toFixed(2)}`;
                 document.querySelector('.checkout-btn span:first-child').textContent = `$${data.newTotal.toFixed(2)}`;
+
+                document.getElementById('totalAmount').value = data.newTotal.toFixed(2);
 
                 // Handle quantity buttons based on action
                 const plusButton = document.querySelector(`button[onclick="updateQuantity(${bookId}, 1)"]`);

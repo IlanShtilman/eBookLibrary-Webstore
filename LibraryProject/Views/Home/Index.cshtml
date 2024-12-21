@@ -19,6 +19,10 @@
                 {
                     <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
                 }
+                @if (ViewBag.isLogged == 1)
+                {
+                    <li><a asp-controller="Order" asp-action="ViewOrderedBooks" id="viewOrderNavBtn">My Orders</a></li>
+                }
             </ul>
             <div class="nav-icons">
                 <div class="nav-icons">
@@ -362,7 +366,8 @@ function openAboutTab(evt, tabName) {
 
 document.addEventListener('DOMContentLoaded', function () {
     var viewBookNavBtn = document.getElementById('viewBookNavBtn');
-    var addBookNavBtn = document.getElementById('viewBookNavBtn');
+    var addBookNavBtn = document.getElementById('addBookNavBtn');
+    var viewOrderNavBtn = document.getElementById('viewOrderNavBtn');
     if (viewBookNavBtn) {
         viewBookNavBtn.addEventListener('click', function (event) {
             event.preventDefault(); // Prevent the default link behavior
@@ -370,9 +375,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     if (addBookNavBtn) {
-        viewBookNavBtn.addEventListener('click', function (event) {
+        addBookNavBtn.addEventListener('click', function (event) {
             event.preventDefault(); // Prevent the default link behavior
             window.location.href = '/Book/AddBook'; // Redirect to the desired URL
+        });
+    }
+    if (viewOrderNavBtn) {
+        addBookNavBtn.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default link behavior
+            window.location.href = '/Order/ViewOrderedBooks'; // Redirect to the desired URL
         });
     }
 });

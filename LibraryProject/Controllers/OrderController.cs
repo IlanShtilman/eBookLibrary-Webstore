@@ -35,7 +35,7 @@ public class OrderController : Controller
             .Select(g => new
             {
                 OrderDate = g.Key,
-                TotalPrice = g.Sum(o => o.Price * o.Quantity),
+                TotalPrice = g.Sum(o => o.Price) + 10,
                 OrderIds = g.Select(o => o.OrderId).Distinct().ToList()
             })
             .OrderByDescending(o => o.OrderDate)
@@ -64,8 +64,8 @@ public class OrderController : Controller
                     BookTitle = book.Title,
                     Quantity = order.Quantity,
                     Action = order.Action,
-                    Price = order.Price,
-                    TotalPrice = order.Price * order.Quantity,
+                    Price = order.Price / order.Quantity,
+                    TotalPrice = order.Price,
                     OrderDate = order.OrderDate
                 })
             .ToListAsync();
@@ -76,7 +76,7 @@ public class OrderController : Controller
         }
 
         ViewBag.OrderDate = orderDetails.First().OrderDate;
-        ViewBag.TotalOrderPrice = orderDetails.Sum(od => od.TotalPrice);
+        ViewBag.TotalOrderPrice = orderDetails.Sum(od => od.TotalPrice) + 10;
         
         return View(orderDetails);
     }
