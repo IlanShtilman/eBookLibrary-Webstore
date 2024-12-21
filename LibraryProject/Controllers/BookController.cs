@@ -482,11 +482,11 @@ public class BookController : Controller
         var existingInCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc => 
             sc.BookId == bookId && 
             sc.Username == username);
-
-        if (existingInCart != null)
-        {
-            return Json(new { success = false, message = "This book is already in your cart." });
-        }
+        //We need to check that since it was the cause to not allow to add somebooks (multi times)
+        // if (existingInCart != null)
+        // {
+        //     return Json(new { success = false, message = "This book is already in your cart." });
+        // }
     
         var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
         var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc => 

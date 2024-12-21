@@ -109,11 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="sf-product-card__actions">
                         ${book.isAvailableToBuy
-                ? `<button class="buy-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
-                                       data-book-id="${book.bookId}" 
-                                       ${book.availableCopies <= 0 ? 'disabled' : ''}>
-                                 Buy
-                               </button>`
+                ? `<button class="buy-btn" 
+             data-book-id="${book.bookId}">
+             Buy
+           </button>`
                 : ''}
                         ${book.isAvailableToBorrow && book.availableCopies > 0
                 ? `<button class="borrow-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
@@ -303,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }, 3000);
 
-                    if (result.success) {
+                    if (result.success && result.action === 'borrow') {
                         filterBooks();
                     }
                 } catch (error) {
