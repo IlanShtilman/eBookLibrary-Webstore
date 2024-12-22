@@ -69,3 +69,77 @@ async function addToCart(bookId, action) {
         console.error('Error:', error);
     }
 }
+
+async function addToCart(bookId, action) {
+    try {
+        const response = await fetch('/ShoppingCart/AddToCart', {  // Updated URL
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                bookId: bookId,
+                quantity: 1,
+                action: action
+            })
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/User/Login';
+            return;
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Create success message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'success-message';
+            messageDiv.textContent = result.message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.zIndex = '9999';
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+
+            // Remove from wishlist after successful cart addition
+            await removeFromWishlist(bookId);
+
+            // Redirect to shopping cart
+            window.location.href = '/ShoppingCart';
+        } else {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'error-message';
+            messageDiv.textContent = result.message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.zIndex = '9999';
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => messageDiv.remove(), 3000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'error-message';
+        messageDiv.textContent = 'An error occurred while adding to cart';
+        messageDiv.style.position = 'fixed';
+        messageDiv.style.top = '20px';
+        messageDiv.style.left = '50%';
+        messageDiv.style.transform = 'translateX(-50%)';
+        messageDiv.style.zIndex = '9999';
+
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => messageDiv.remove(), 3000);
+    }
+}

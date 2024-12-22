@@ -13,6 +13,7 @@ public class ShoppingCartController : Controller
     private string PaypalClientId { get; set; } = "";
     private string PaypalSecret { get; set; } = "";
     private string PaypalUrl { get; set; } = ""; 
+    
     private readonly MVCProjectContext _context;
 
     public ShoppingCartController(MVCProjectContext context, IConfiguration configuration)
@@ -23,7 +24,6 @@ public class ShoppingCartController : Controller
         _context = context;
     }
 
-    // GET
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -32,6 +32,24 @@ public class ShoppingCartController : Controller
         if (string.IsNullOrEmpty(username))
         {
             return RedirectToAction("Login", "User");
+        }
+
+        // First, check and fix any inconsistencies
+        var borrowedItems = await _context.ShoppingCarts
+            .Where(s => s.Username == username && s.Action.ToLower() == "borrow")
+            .ToListAsync();
+
+        // If there are more than 3 borrowed items, convert excess to buy
+        if (borrowedItems.Count > 3)
+        {
+            var itemsToConvert = borrowedItems.Skip(3);
+            foreach (var item in itemsToConvert)
+            {
+                var book = await _context.Books.FindAsync(item.BookId);
+                item.Action = "buy";
+                item.Price = book.IsOnDiscount ? book.DiscountedBuyPrice.Value : book.BuyPrice;
+            }
+            await _context.SaveChangesAsync();
         }
 
         var cartItems = await _context.ShoppingCarts
@@ -49,7 +67,8 @@ public class ShoppingCartController : Controller
                     b.Title,
                     b.Author,
                     b.IsAvailableToBuy,
-                    b.IsAvailableToBorrow
+                    b.IsAvailableToBorrow,
+                    b.AvailableCopies
                 })
             .ToListAsync();
 
@@ -148,85 +167,113 @@ public class ShoppingCartController : Controller
     [HttpPost]
     public async Task<IActionResult> UpdateAction(int bookId, string newAction)
     {
-        string username = HttpContext.Session.GetString("Username");
-        
-        var existingItem = await _context.ShoppingCarts
-            .FirstOrDefaultAsync(s => s.BookId == bookId && s.Username == username);
-        
-        if (existingItem != null)
+        try
         {
-            // If trying to change to borrow, check the current borrow count
-            if (newAction.ToLower() == "borrow")
+            Console.WriteLine($"Received update request - BookId: {bookId}, NewAction: {newAction}");
+            
+            string username = HttpContext.Session.GetString("Username");
+            Console.WriteLine($"Username from session: {username}");
+            
+            if (string.IsNullOrEmpty(username))
             {
-                var currentBorrowCount = await _context.ShoppingCarts
-                    .CountAsync(sc => sc.Username == username && 
-                               sc.Action.ToLower() == "borrow" && 
-                               sc.BookId != bookId); // Exclude current book from count
+                Console.WriteLine("No username found in session");
+                return Json(new { success = false, message = "User not logged in" });
+            }
 
-                if (currentBorrowCount >= 3)
+            var existingItem = await _context.ShoppingCarts
+                .FirstOrDefaultAsync(s => s.BookId == bookId && s.Username == username);
+            
+            Console.WriteLine($"Existing cart item found: {existingItem != null}");
+
+            if (existingItem != null)
+            {
+                Console.WriteLine($"Current action: {existingItem.Action}, New action: {newAction}");
+                
+                if (newAction.ToLower() == "borrow")
                 {
-                    return Json(new { 
-                        success = false, 
-                        message = "You can only borrow up to 3 books at a time.",
-                        currentAction = existingItem.Action
-                    });
+                    var currentBorrowCount = await _context.ShoppingCarts
+                        .CountAsync(sc => sc.Username == username && 
+                                   sc.Action.ToLower() == "borrow" && 
+                                   sc.BookId != bookId);
+
+                    Console.WriteLine($"Current borrow count: {currentBorrowCount}");
+
+                    if (currentBorrowCount >= 3)
+                    {
+                        Console.WriteLine("Borrow limit exceeded");
+                        return Json(new { 
+                            success = false, 
+                            message = "You can only borrow up to 3 books at a time.",
+                            currentAction = existingItem.Action
+                        });
+                    }
                 }
-            }
 
-            var book = await _context.Books.FindAsync(bookId);
+                var book = await _context.Books.FindAsync(bookId);
+                if (book == null)
+                {
+                    return Json(new { success = false, message = "Book not found" });
+                }
 
-            // If changing from borrow to buy, increment available copies
-            if (existingItem.Action.ToLower() == "borrow" && newAction.ToLower() == "buy")
-            {
-                book.AvailableCopies++;
-            }
-            // If changing from buy to borrow, decrement available copies
-            else if (existingItem.Action.ToLower() == "buy" && newAction.ToLower() == "borrow")
-            {
-                book.AvailableCopies--;
-            }
+                if (existingItem.Action.ToLower() == "borrow" && newAction.ToLower() == "buy")
+                {
+                    book.AvailableCopies++;
+                }
+                else if (existingItem.Action.ToLower() == "buy" && newAction.ToLower() == "borrow")
+                {
+                    book.AvailableCopies--;
+                }
 
-            _context.ShoppingCarts.Remove(existingItem);
+                _context.ShoppingCarts.Remove(existingItem);
 
-            // Calculate the appropriate price based on action and discount
-            double price;
-            if (newAction.ToLower() == "buy")
-            {
-                price = book.IsOnDiscount ? book.DiscountedBuyPrice.Value : book.BuyPrice;
+                double price;
+                if (newAction.ToLower() == "buy")
+                {
+                    price = book.IsOnDiscount ? book.DiscountedBuyPrice.Value : book.BuyPrice;
+                }
+                else
+                {
+                    price = book.BorrowPrice;
+                }
+
+                var newCartItem = new ShoppingCart
+                {
+                    Username = username,
+                    BookId = bookId,
+                    Action = newAction.ToLower(),
+                    Quantity = 1,
+                    Price = price
+                };
+            
+                _context.ShoppingCarts.Add(newCartItem);
+                await _context.SaveChangesAsync();
+
+                var newSubtotal = await _context.ShoppingCarts
+                    .Where(s => s.Username == username)
+                    .SumAsync(s => s.Price);
+
+                Console.WriteLine("Update successful");
+                return Json(new { 
+                    success = true, 
+                    newPrice = newCartItem.Price,
+                    newQuantity = newCartItem.Quantity,
+                    newSubtotal = newSubtotal,
+                    newTotal = newSubtotal + 10,
+                    currentAction = newCartItem.Action
+                });
             }
             else
             {
-                price = book.BorrowPrice;
+                Console.WriteLine("Cart item not found");
+                return Json(new { success = false, message = "Cart item not found" });
             }
-
-            var newCartItem = new ShoppingCart
-            {
-                Username = username,
-                BookId = bookId,
-                Action = newAction.ToLower(),
-                Quantity = 1,
-                Price = price
-            };
-        
-            _context.ShoppingCarts.Add(newCartItem);
-            await _context.SaveChangesAsync();
-
-            // Calculate new totals
-            var newSubtotal = await _context.ShoppingCarts
-                .Where(s => s.Username == username)
-                .SumAsync(s => s.Price);
-
-            return Json(new { 
-                success = true, 
-                newPrice = newCartItem.Price,
-                newQuantity = newCartItem.Quantity,
-                newSubtotal = newSubtotal,
-                newTotal = newSubtotal + 10,
-                currentAction = newCartItem.Action
-            });
         }
-
-        return Json(new { success = false });
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in UpdateAction: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return Json(new { success = false, message = $"Error: {ex.Message}" });
+        }
     }
 
     /*
@@ -235,6 +282,75 @@ public class ShoppingCartController : Controller
         return await GetPaypalAccessToken();
     }
     */
+    
+    [HttpPost]
+    public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
+    {
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            return Unauthorized();
+        }
+
+        var book = await _context.Books.FindAsync(request.BookId);
+        if (book == null)
+        {
+            return Json(new { success = false, message = "Book not found" });
+        }
+
+        // Check borrow limit if action is borrow
+        if (request.Action.ToLower() == "borrow")
+        {
+            var currentBorrowCount = await _context.ShoppingCarts
+                .CountAsync(sc => sc.Username == username && 
+                                  sc.Action.ToLower() == "borrow");
+
+            if (currentBorrowCount >= 3)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "You can only borrow up to 3 books at a time."
+                });
+            }
+
+            if (book.AvailableCopies <= 0)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "No copies available for borrowing."
+                });
+            }
+
+            // Decrease available copies for borrow
+            book.AvailableCopies--;
+        }
+
+        // Calculate price based on action
+        double price = request.Action.ToLower() == "buy" 
+            ? (book.IsOnDiscount ? book.DiscountedBuyPrice.Value : book.BuyPrice)
+            : book.BorrowPrice;
+
+        var cartItem = new ShoppingCart
+        {
+            Username = username,
+            BookId = request.BookId,
+            Action = request.Action.ToLower(),
+            Quantity = request.Quantity,
+            Price = price
+        };
+
+        await _context.ShoppingCarts.AddAsync(cartItem);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = $"Book added to cart for {request.Action}" });
+    }
+
+    public class AddToCartRequest
+    {
+        public int BookId { get; set; }
+        public int Quantity { get; set; }
+        public string Action { get; set; }
+    }
     
     private async Task<string> GetPaypalAccessToken()
     {
@@ -398,7 +514,7 @@ public class ShoppingCartController : Controller
                         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
                         {
                             await connection.OpenAsync();
-                            using (var command = new OracleCommand("SELECT PERSTIN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
+                            using (var command = new OracleCommand("SELECT SHTILMAN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
                             {
                                 nextOrderId = Convert.ToInt32(await command.ExecuteScalarAsync());
                             }
