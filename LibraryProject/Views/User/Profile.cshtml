@@ -1,0 +1,184 @@
+@model LibraryProject.Models.User
+@{
+    ViewData["Title"] = "Profile";
+}
+<link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true"/>
+@* Section of Header website *@
+<div id="header">
+    <div class="container">
+        <nav>
+            <ul id="sideMenu">
+                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a asp-controller="User" asp-action="Profile">Profile</a></li>
+                <li><a asp-controller="Book" asp-action="Store">Store</a></li>
+                <li><a asp-controller="Book" asp-action="ViewBook" id="viewBookNavBtn">View Books</a></li>
+                @if (ViewBag.Role == 1)
+                {
+                    <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
+                }
+                @if (ViewBag.isLogged == 1)
+                {
+                    <li><a asp-controller="Order" asp-action="ViewOrderedBooks" id="viewOrderNavBtn">My Orders</a></li>
+                }
+            </ul>
+            <div class="nav-icons">
+                <div class="nav-icons">
+                    @if (string.IsNullOrEmpty(@Model.Username))
+                    {
+                        <a asp-controller="User" asp-action="Login" class="icon-link">
+                            <i class="fa-solid fa-user"></i>
+                        </a>
+                        <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-heart"></i>
+                        </a>
+
+                    }
+                    else
+                    {
+                        <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-heart"></i>
+                        </a>
+                        <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </a>
+                        <a asp-controller="User" asp-action="Logout" class="icon-link">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="banner-container">
+    <div class="banner-image"></div>
+    <div class="banner-overlay"></div>
+    <div class="banner-text">
+        <h1 class="fade-in">Read anywhere, from everywhere.</h1>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="profile-container">
+        <!-- Personal Information -->
+        <div class="profile-section">
+            <h2><i class="fas fa-user-circle"></i> Personal Information</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <i class="fas fa-user"></i>
+                    <div>
+                        <label>Username</label>
+                        <p>@Model.Username</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <label>Email</label>
+                        <p>@Model.Email</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-user-edit"></i>
+                    <div>
+                        <label>Full Name</label>
+                        <p>@Model.FirstName @Model.LastName</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-venus-mars"></i>
+                    <div>
+                        <label>Gender</label>
+                        <p>@Model.Gender</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-shopping-bag"></i> 
+                    <div>
+                        <label>Total Orders</label>
+                        <p>@ViewBag.TotalOrders</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="profile-section">
+            <h2><i class="fas fa-shopping-bag"></i> Recent Orders</h2>
+            @if (ViewBag.Orders != null && ((IEnumerable<dynamic>)ViewBag.Orders).Any())
+            {
+                <div class="orders-grid">
+                    @foreach (var order in ViewBag.Orders)
+                    {
+                        <div class="order-card">
+                            <div class="order-header">
+                                <span class="order-number">#@order.OrderId</span>
+                                <span class="order-date">@order.OrderDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="order-details">
+                                <span class="order-type">@order.Action</span>
+                                <span class="order-price">$@order.Price.ToString("F2")</span>
+                            </div>
+                            <a href="@Url.Action("ViewOrderedBooks", "Order", new { orderId = order.OrderId })" class="view-order-btn">
+                                View Details
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>No orders yet</p>
+                </div>
+            }
+        </div>
+
+        <!-- Reviews -->
+        <div class="profile-section">
+            <h2><i class="fas fa-star"></i> My Reviews</h2>
+            @if (ViewBag.Reviews != null && ((IEnumerable<dynamic>)ViewBag.Reviews).Any())
+            {
+                <div class="reviews-grid">
+                    @foreach (var review in ViewBag.Reviews)
+                    {
+                        <div class="review-card">
+                            <div class="review-header">
+                                <h4>@review.BookTitle</h4>
+                                <div class="rating">
+                                    @for (int i = 0; i < review.Rating; i++)
+                                    {
+                                        <i class="fas fa-star"></i>
+                                    }
+                                </div>
+                            </div>
+                            <p class="review-content">@review.Content</p>
+                            <div class="review-footer">
+                                @review.CreatedAt.ToString("MMM dd, yyyy")
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-comment-alt"></i>
+                    <p>No reviews yet</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="CR">
+    <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
+</div>
+
+
+

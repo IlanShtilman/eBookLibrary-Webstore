@@ -585,4 +585,5 @@ public class BookController : Controller
             return Json(new { success = false, message = "You have reached the maximum limit of 3 borrowed books." });
         }
     }
+    
 }
