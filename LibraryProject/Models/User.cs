@@ -32,7 +32,4 @@ public class User
     public UserRole Role { get; set; }
     public int MaxBorrowed { get; set; }
     
-    //Relations
-    //public ICollection<Review> Reviews { get; set; }
-    //public ICollection<UserBook> UserBooks { get; set; }
 }

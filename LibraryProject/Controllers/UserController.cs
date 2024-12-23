@@ -120,4 +120,60 @@ public class UserController : Controller
         return RedirectToAction("Index", "Home");
     }
     
+    [HttpGet]
+    public async Task<IActionResult> Profile()
+    {
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            return RedirectToAction("Login", "User");
+        }
+
+        // Get user details
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        // Get user's orders - simplified
+        var orders = await _context.Orders
+            .Where(o => o.Username == username)
+            .OrderByDescending(o => o.OrderDate)
+            .Take(5)
+            .Select(o => new
+            {
+                o.OrderId,
+                o.Action,
+                o.Price,
+                o.OrderDate
+            })
+            .ToListAsync();
+
+        // Get user's reviews
+        var reviews = await _context.Reviews
+            .Where(r => r.Username == username)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(5)
+            .Join(_context.Books,
+                review => review.BookId,
+                book => book.BookId,
+                (review, book) => new
+                {
+                    BookTitle = book.Title,
+                    review.Content,
+                    review.Rating,
+                    review.CreatedAt
+                })
+            .ToListAsync();
+        
+        var totalOrders = await _context.Orders
+            .CountAsync(o => o.Username == username);
+
+        ViewBag.TotalOrders = totalOrders;
+        ViewBag.Orders = orders;
+        ViewBag.Reviews = reviews;
+
+        return View(user);
+    }
 }
