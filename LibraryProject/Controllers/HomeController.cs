@@ -5,6 +5,7 @@ using LibraryProject.Data;
 using Microsoft.AspNetCore.Mvc;
 using LibraryProject.Models;
 using Microsoft.EntityFrameworkCore;
+using Oracle.ManagedDataAccess.Client;
 
 namespace LibraryProject.Controllers;
 
@@ -26,6 +27,8 @@ public class HomeController : Controller
         string username = HttpContext.Session.GetString("Username");
         ViewBag.Role = 0;
         ViewBag.isLogged = 0;
+        ViewBag.CanReview = false;
+        
         if (username != null)
         {
             ViewBag.isLogged = 1;
@@ -34,16 +37,72 @@ public class HomeController : Controller
             {
                 ViewBag.Role = 1;
             }
+            
+            var hasOrders = await _context.Orders.AnyAsync(o => o.Username == username);
+            if (hasOrders)
+            {
+                ViewBag.CanReview = true;
+            }
         }
-        var reviews = await _context.Reviews
+        var siteReviews = await _context.SiteReviews
             .OrderByDescending(r => r.CreatedAt)
             .Take(5)
             .ToListAsync();
-        ViewBag.Username = HttpContext.Session.GetString("Username");    
-        return View(reviews);
+            
+        return View(siteReviews);
     }
     
+    [HttpPost]
+    public async Task<IActionResult> AddSiteReview([FromBody] SiteReviewViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Invalid form data." });
+        }
+
+        var username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            return Json(new { success = false, message = "You must be logged in to add a review." });
+        }
     
+        var hasOrders = await _context.Orders.AnyAsync(o => o.Username == username);
+        if (!hasOrders)
+        {
+            return Json(new { success = false, message = "You must have at least one order to add a review." });
+        }
+    
+        int nextReviewId;
+        using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
+        {
+            await connection.OpenAsync();
+            using (var command = new OracleCommand("SELECT PERSTIN.SITEREVIEWS_SEQ.NEXTVAL FROM DUAL", connection))
+            {
+                nextReviewId = Convert.ToInt32(await command.ExecuteScalarAsync());
+            }
+        }
+    
+        var review = new SiteReview
+        {
+            Id = nextReviewId,
+            Username = username,
+            Title = model.Title,
+            Content = model.Content,
+            Rating = model.Rating,
+            CreatedAt = DateTime.Now
+        };
+    
+        _context.SiteReviews.Add(review);
+        await _context.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+
+    public class SiteReviewViewModel
+    {
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public int Rating { get; set; }
+    }
     public IActionResult Privacy()
     {
         return View();
