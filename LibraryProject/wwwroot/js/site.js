@@ -1,30 +1,39 @@
 ﻿document.getElementById('contact-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
+    const formData = {
+        FullName: e.target.Name.value,
+        Email: e.target.email.value,
+        Message: e.target.message.value,
+    };
+
     try {
         const response = await fetch('/Home/Submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                FullName: e.target.Name.value,
-                Email: e.target.email.value,
-                Message: e.target.message.value
-            })
+            body: JSON.stringify(formData)
         });
 
+        const messageBox = document.getElementById('messageBox');
+        const successMessage = document.getElementById('successMessage');
+
         if (response.ok) {
-            document.getElementById('successMessage').textContent = 'Message sent successfully!';
-            document.getElementById('messageBox').style.display = 'block';
+            successMessage.textContent = 'Message sent successfully!';
             e.target.reset();
         } else {
-            throw new Error('Failed to send message');
+            successMessage.textContent = 'Failed to send message. Please try again.';
         }
+
+        messageBox.style.display = 'block';
+
+        setTimeout(() => {
+            messageBox.style.display = 'none';
+        }, 3000);
+
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('successMessage').textContent = 'Failed to send message. Please try again.';
-        document.getElementById('messageBox').style.display = 'block';
     }
 });
 

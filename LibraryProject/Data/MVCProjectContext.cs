@@ -16,21 +16,26 @@ namespace LibraryProject.Data
         public DbSet<Wishlist> Wishlist { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
         public DbSet<SiteReview> SiteReviews { get; set; }
+        public DbSet<WaitingList> WaitingList { get; set; }
+        
+        public DbSet<Contact> Contacts { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.HasDefaultSchema("PERSTIN");
+            modelBuilder.HasDefaultSchema("SHTILMAN");
             
-            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "PERSTIN").StartsAt(0).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("BOOKS_SEQ", schema: "PERSTIN").StartsAt(8).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("ORDER_SEQ", schema: "PERSTIN").StartsAt(6).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("SITEREVIEWS_SEQ", schema: "PERSTIN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "SHTILMAN").StartsAt(0).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("BOOKS_SEQ", schema: "SHTILMAN").StartsAt(8).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("ORDER_SEQ", schema: "SHTILMAN").StartsAt(6).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("SITEREVIEWS_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("WAITINGLIST_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("CONTACTS_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
             
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("USERS","PERSTIN");
+                entity.ToTable("USERS","SHTILMAN");
                 entity.HasKey(e => e.Username);
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
@@ -52,7 +57,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Book>(entity =>
             {
-                entity.ToTable("BOOKS","PERSTIN");
+                entity.ToTable("BOOKS","SHTILMAN");
                 entity.HasKey(e => e.BookId);
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.Title).HasColumnName("TITLE");
@@ -79,7 +84,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Review>(entity =>
             {
-                entity.ToTable("REVIEWS", "PERSTIN");
+                entity.ToTable("REVIEWS", "SHTILMAN");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("REVIEWID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -92,7 +97,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Order>(entity =>
             {
-                entity.ToTable("ORDERS", "PERSTIN");
+                entity.ToTable("ORDERS", "SHTILMAN");
                 entity.HasKey(e => new { e.OrderId, e.Username, e.BookId });
                 entity.Property(e => e.OrderId).HasColumnName("ORDERID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -105,7 +110,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Wishlist>(entity =>
             {
-                entity.ToTable("WISHLIST", "PERSTIN");
+                entity.ToTable("WISHLIST", "SHTILMAN");
                 entity.HasKey(e => new { e.Username, e.BookId });
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
@@ -123,7 +128,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<ShoppingCart>(entity =>
             {
-                entity.ToTable("SHOPPINGCART", "PERSTIN");
+                entity.ToTable("SHOPPINGCART", "SHTILMAN");
                 entity.HasKey(e => new { e.Username, e.BookId, e.Action });
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
@@ -134,7 +139,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<SiteReview>(entity =>
             {
-                entity.ToTable("SITEREVIEWS", "PERSTIN");
+                entity.ToTable("SITEREVIEWS", "SHTILMAN");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("REVIEWID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -142,6 +147,53 @@ namespace LibraryProject.Data
                 entity.Property(e => e.Content).HasColumnName("CONTENT");
                 entity.Property(e => e.Rating).HasColumnName("RATING");
                 entity.Property(e => e.CreatedAt).HasColumnName("REVIEWDATE");
+            });
+            
+
+            modelBuilder.Entity<WaitingList>(entity =>
+            {
+                entity.ToTable("WAITINGLIST", "SHTILMAN");
+                entity.HasKey(e => e.WaitingListId);
+                entity.HasIndex(e => new { e.Username, e.BookId })
+                    .IsUnique()
+                    .HasDatabaseName("UK_WAITINGLIST_USERNAME_BOOKID");
+                entity.Property(e => e.WaitingListId)
+                    .HasColumnName("WAITINGLISTID")
+                    .ValueGeneratedOnAdd()
+                    .HasDefaultValueSql("SHTILMAN.WAITINGLIST_SEQ.NEXTVAL");
+                entity.Property(e => e.Username).HasColumnName("USERNAME");
+                entity.Property(e => e.BookId).HasColumnName("BOOKID");
+                entity.Property(e => e.JoinDate)
+                    .HasColumnName("JOINDATE")
+                    .HasDefaultValueSql("SYSDATE");
+                entity.Property(e => e.Position).HasColumnName("POSITION");
+                entity.Property(e => e.IsNotified)
+                    .HasColumnName("ISNOTIFIED")
+                    .HasDefaultValue(0);
+                entity.Property(e => e.NotificationDate).HasColumnName("NOTIFICATIONDATE");
+                entity.Property(e => e.ExpiryDate).HasColumnName("EXPIRYDATE");
+            });
+            
+            modelBuilder.Entity<Contact>(entity =>
+            {
+                entity.ToTable("CONTACTS", "SHTILMAN");
+                entity.HasKey(e => e.ContactId);
+                entity.Property(e => e.ContactId)
+                    .HasColumnName("CONTACT_ID")
+                    .ValueGeneratedOnAdd()
+                    .HasDefaultValueSql("SHTILMAN.CONTACTS_SEQ.NEXTVAL");
+                entity.Property(e => e.FullName)
+                    .HasColumnName("FULL_NAME")
+                    .IsRequired();
+                entity.Property(e => e.Email)
+                    .HasColumnName("EMAIL")
+                    .IsRequired();
+                entity.Property(e => e.Message)
+                    .HasColumnName("MESSAGE")
+                    .IsRequired();
+                entity.Property(e => e.SubmissionDate)
+                    .HasColumnName("SUBMISSION_DATE")
+                    .HasDefaultValueSql("SYSTIMESTAMP");
             });
         }
     }

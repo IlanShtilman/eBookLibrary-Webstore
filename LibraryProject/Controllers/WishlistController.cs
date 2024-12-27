@@ -58,6 +58,5 @@ public class WishlistController : Controller
         }
         return Json(new { success = false });
     }
-    
 }
 
