@@ -174,8 +174,41 @@
                 </div>
             }
         </div>
+        <!-- Waiting List Section -->
+        <div class="profile-section">
+            <h2><i class="fas fa-clock"></i> WAITING LIST</h2>
+            @if (ViewBag.WaitingList != null && ((IEnumerable<dynamic>)ViewBag.WaitingList).Any())
+            {
+                <div class="waitlist-content">
+                    @foreach (var item in ViewBag.WaitingList)
+                    {
+                        <div class="waitlist-item">
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/Bookcovers/{item.ImageUrl}")"
+                                 alt="@item.BookTitle"
+                                 class="waitlist-image">
+                            <div class="item-details">
+                                <h3>@item.BookTitle</h3>
+                                <p class="queue-info">#@item.Position in line</p>
+                                <p class="join-date">Joined: @item.JoinDate.ToString("yyyy.dd'тxт'")</p>
+                                <p class="est-wait">Est. Wait: @(Math.Ceiling(item.Position / 3.0) * 30) days</p>
+                                <p class="borrow-price">Borrow Price: $@item.BorrowPrice.ToString("F2")</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-hourglass"></i>
+                    <p>Not currently waiting for any books</p>
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+
 <div class="CR">
     <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
 </div>

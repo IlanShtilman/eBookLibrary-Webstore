@@ -169,7 +169,23 @@ public class UserController : Controller
         
         var totalOrders = await _context.Orders
             .CountAsync(o => o.Username == username);
+        
+        var waitingList = await _context.WaitingList
+            .Where(w => w.Username == username)
+            .Join(_context.Books,
+                w => w.BookId,
+                b => b.BookId,
+                (w, b) => new {
+                    w.Position,
+                    w.JoinDate,
+                    BookTitle = b.Title,
+                    b.ImageUrl,
+                    b.BorrowPrice
+                })
+            .OrderBy(w => w.Position)
+            .ToListAsync();
 
+        ViewBag.WaitingList = waitingList;
         ViewBag.TotalOrders = totalOrders;
         ViewBag.Orders = orders;
         ViewBag.Reviews = reviews;
