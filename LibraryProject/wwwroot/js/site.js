@@ -1,57 +1,62 @@
-﻿document.getElementById('contact-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+﻿document.addEventListener('DOMContentLoaded', function () {
+    // Contact Form handler
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-    const formData = {
-        FullName: e.target.Name.value,
-        Email: e.target.email.value,
-        Message: e.target.message.value,
-    };
+            const formData = {
+                FullName: e.target.Name.value,
+                Email: e.target.email.value,
+                Message: e.target.message.value,
+            };
 
-    try {
-        const response = await fetch('/Home/Submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+            try {
+                const response = await fetch('/Home/Submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const messageBox = document.getElementById('messageBox');
+                const successMessage = document.getElementById('successMessage');
+
+                if (response.ok) {
+                    successMessage.textContent = 'Message sent successfully!';
+                    e.target.reset();
+                } else {
+                    successMessage.textContent = 'Failed to send message. Please try again.';
+                }
+
+                messageBox.style.display = 'block';
+
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
         });
+    }
 
-        const messageBox = document.getElementById('messageBox');
-        const successMessage = document.getElementById('successMessage');
-
-        if (response.ok) {
-            successMessage.textContent = 'Message sent successfully!';
-            e.target.reset();
-        } else {
-            successMessage.textContent = 'Failed to send message. Please try again.';
+    // About Tab functionality
+    window.openAboutTab = function(evt, tabName) {
+        var tabcontent = document.getElementsByClassName("tab-content");
+        for (var i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
         }
-
-        messageBox.style.display = 'block';
-
-        setTimeout(() => {
-            messageBox.style.display = 'none';
-        }, 3000);
-
-    } catch (error) {
-        console.error('Error:', error);
+        var tablinks = document.getElementsByClassName("tab-link");
+        for (var i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
     }
-});
 
-function openAboutTab(evt, tabName) {
-    var tabcontent = document.getElementsByClassName("tab-content");
-    for (var i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].classList.remove("active");
-    }
-    var tablinks = document.getElementsByClassName("tab-link");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].classList.remove("active");
-    }
-    document.getElementById(tabName).classList.add("active");
-    evt.currentTarget.classList.add("active");
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Previous navigation button code remains the same
+    // Navigation buttons
     var viewBookNavBtn = document.getElementById('viewBookNavBtn');
     var addBookNavBtn = document.getElementById('addBookNavBtn');
     var viewOrderNavBtn = document.getElementById('viewOrderNavBtn');
@@ -118,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Carousel code
+    // Carousel handler
     const carousel = document.getElementById('myCarousel');
     if (carousel) {
         const items = carousel.querySelectorAll('.carousel-item');
