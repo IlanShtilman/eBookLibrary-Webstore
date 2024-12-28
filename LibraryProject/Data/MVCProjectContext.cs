@@ -106,6 +106,9 @@ namespace LibraryProject.Data
                 entity.Property(e => e.Price).HasColumnName("PRICE");
                 entity.Property(e => e.Quantity).HasColumnName("QUANTITY");
                 entity.Property(e => e.OrderDate).HasColumnName("ORDERDATE");
+                entity.Property(e => e.BorrowStartDate).HasColumnName("BORROWSTARTDATE");
+                entity.Property(e => e.BorrowEndDate).HasColumnName("BORROWENDDATE");
+                entity.Property(e => e.IsReturned).HasColumnName("ISRETURNED");
             });
             
             modelBuilder.Entity<Wishlist>(entity =>

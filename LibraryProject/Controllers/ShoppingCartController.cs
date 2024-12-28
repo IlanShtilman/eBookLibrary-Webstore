@@ -530,20 +530,64 @@ public class ShoppingCartController : Controller
                             foreach (var item in cartItems)
                             {
                                 using (var command = new OracleCommand(
-                                           "INSERT INTO Orders (OrderId, Username, BookId, Action, Quantity, Price, OrderDate) VALUES (:OrderId, :Username, :BookId, :Action, :Quantity, :Price, :OrderDate)", connection))
-                                {
-                                    command.Parameters.Add(new OracleParameter("OrderId", nextOrderId));
-                                    command.Parameters.Add(new OracleParameter("Username", item.Username));
-                                    command.Parameters.Add(new OracleParameter("BookId", item.BookId));
-                                    command.Parameters.Add(new OracleParameter("Action", item.Action));
-                                    command.Parameters.Add(new OracleParameter("Quantity", item.Quantity));
-                                    command.Parameters.Add(new OracleParameter("Price", item.Price));
-                                    command.Parameters.Add(new OracleParameter("OrderDate", DateTime.Now));
-                                    await command.ExecuteNonQueryAsync();
-                                }
+                                    "INSERT INTO Orders (OrderId, Username, BookId, Action, Quantity, Price, OrderDate, BorrowStartDate, BorrowEndDate, IsReturned) " +
+                                    "VALUES (:OrderId, :Username, :BookId, :Action, :Quantity, :Price, :OrderDate, :BorrowStartDate, :BorrowEndDate, :IsReturned)", 
+                                 connection))
+                            {
+                             var currentDate = DateTime.Now;
+
+                             // Basic parameters
+                             command.Parameters.Add(new OracleParameter("OrderId", nextOrderId));
+                             command.Parameters.Add(new OracleParameter("Username", item.Username));
+                             command.Parameters.Add(new OracleParameter("BookId", item.BookId));
+                             command.Parameters.Add(new OracleParameter("Action", item.Action));
+                             command.Parameters.Add(new OracleParameter("Quantity", item.Quantity));
+                             command.Parameters.Add(new OracleParameter("Price", item.Price));
+                             command.Parameters.Add(new OracleParameter("OrderDate", currentDate));
+                            
+                             if (item.Action == "Borrow")
+                             {
+                                 var startDateParam = new OracleParameter("BorrowStartDate", OracleDbType.Date)
+                                 {
+                                     Value = currentDate
+                                 };
+                                 command.Parameters.Add(startDateParam);
+
+                                 var endDateParam = new OracleParameter("BorrowEndDate", OracleDbType.Date)
+                                 {
+                                     Value = currentDate.AddDays(30)
+                                 };
+                                 command.Parameters.Add(endDateParam);
+
+                                 var isReturnedParam = new OracleParameter("IsReturned", OracleDbType.Int32)
+                                 {
+                                     Value = 0
+                                 };
+                                 command.Parameters.Add(isReturnedParam);
+                             }
+                             else
+                             {
+                                 var startDateParam = new OracleParameter("BorrowStartDate", OracleDbType.Date)
+                                 {
+                                     Value = DBNull.Value
+                                 };
+                                 command.Parameters.Add(startDateParam);
+
+                                 var endDateParam = new OracleParameter("BorrowEndDate", OracleDbType.Date)
+                                 {
+                                     Value = DBNull.Value
+                                 };
+                                 command.Parameters.Add(endDateParam);
+
+                                 var isReturnedParam = new OracleParameter("IsReturned", OracleDbType.Int32)
+                                 {
+                                     Value = DBNull.Value
+                                 };
+                                 command.Parameters.Add(isReturnedParam);
+                             } await command.ExecuteNonQueryAsync();
+                            } 
                             }
                         }
-                        
                         _context.ShoppingCarts.RemoveRange(cartItems);
                         await _context.SaveChangesAsync();
                         
