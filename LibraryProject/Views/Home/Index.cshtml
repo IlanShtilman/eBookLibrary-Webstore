@@ -21,6 +21,10 @@
                 {
                     <li><a asp-controller="Order" asp-action="ViewOrderedBooks" id="viewOrderNavBtn">My Orders</a></li>
                 }
+                @if (ViewBag.isPasswordChanged == 1)
+                {
+                    <li><a asp-controller="User" asp-action="NewPassword" id="newPassNavBtn">Reset Password</a></li>
+                }
             </ul>
             <div class="nav-icons">
                 <div class="nav-icons">

@@ -31,5 +31,6 @@ public class User
     [Required]
     public UserRole Role { get; set; }
     public int MaxBorrowed { get; set; }
+    public int IsPasswordChanged { get; set; }
     
 }

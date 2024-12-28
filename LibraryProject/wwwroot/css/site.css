@@ -1236,3 +1236,7 @@ form input,form textarea{
 .carousel-indicators li.active {
   background: #4682b4;
 }
+
+#newPassNavBtn {
+  color: red;
+}

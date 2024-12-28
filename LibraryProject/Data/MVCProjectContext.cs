@@ -24,18 +24,18 @@ namespace LibraryProject.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.HasDefaultSchema("SHTILMAN");
+            modelBuilder.HasDefaultSchema("PERSTIN");
             
-            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "SHTILMAN").StartsAt(0).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("BOOKS_SEQ", schema: "SHTILMAN").StartsAt(8).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("ORDER_SEQ", schema: "SHTILMAN").StartsAt(6).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("SITEREVIEWS_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("WAITINGLIST_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
-            modelBuilder.HasSequence<int>("CONTACTS_SEQ", schema: "SHTILMAN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("REVIEWS_SEQ", schema: "PERSTIN").StartsAt(0).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("BOOKS_SEQ", schema: "PERSTIN").StartsAt(8).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("ORDER_SEQ", schema: "PERSTIN").StartsAt(6).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("SITEREVIEWS_SEQ", schema: "PERSTIN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("WAITINGLIST_SEQ", schema: "PERSTIN").StartsAt(1).IncrementsBy(1);
+            modelBuilder.HasSequence<int>("CONTACTS_SEQ", schema: "PERSTIN").StartsAt(1).IncrementsBy(1);
             
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("USERS","SHTILMAN");
+                entity.ToTable("USERS","PERSTIN");
                 entity.HasKey(e => e.Username);
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.Password).HasColumnName("PASSWORD");
@@ -43,6 +43,7 @@ namespace LibraryProject.Data
                 entity.Property(e => e.FirstName).HasColumnName("FIRSTNAME");  // Note: FirstName maps to FIRSTNAME
                 entity.Property(e => e.LastName).HasColumnName("LASTNAME");
                 entity.Property(e => e.MaxBorrowed).HasColumnName("MAXBORROWED");
+                entity.Property(e => e.IsPasswordChanged).HasColumnName("ISPASSWORDCHANGED");
     
                 // For the enum properties, we need to tell EF Core to convert them to strings
                 entity.Property(e => e.Gender)
@@ -57,7 +58,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Book>(entity =>
             {
-                entity.ToTable("BOOKS","SHTILMAN");
+                entity.ToTable("BOOKS","PERSTIN");
                 entity.HasKey(e => e.BookId);
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.Title).HasColumnName("TITLE");
@@ -84,7 +85,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Review>(entity =>
             {
-                entity.ToTable("REVIEWS", "SHTILMAN");
+                entity.ToTable("REVIEWS", "PERSTIN");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("REVIEWID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -97,7 +98,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<Order>(entity =>
             {
-                entity.ToTable("ORDERS", "SHTILMAN");
+                entity.ToTable("ORDERS", "PERSTIN");
                 entity.HasKey(e => new { e.OrderId, e.Username, e.BookId });
                 entity.Property(e => e.OrderId).HasColumnName("ORDERID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -113,7 +114,7 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Wishlist>(entity =>
             {
-                entity.ToTable("WISHLIST", "SHTILMAN");
+                entity.ToTable("WISHLIST", "PERSTIN");
                 entity.HasKey(e => new { e.Username, e.BookId });
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
@@ -131,7 +132,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<ShoppingCart>(entity =>
             {
-                entity.ToTable("SHOPPINGCART", "SHTILMAN");
+                entity.ToTable("SHOPPINGCART", "PERSTIN");
                 entity.HasKey(e => new { e.Username, e.BookId, e.Action });
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
@@ -142,7 +143,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<SiteReview>(entity =>
             {
-                entity.ToTable("SITEREVIEWS", "SHTILMAN");
+                entity.ToTable("SITEREVIEWS", "PERSTIN");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("REVIEWID");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
@@ -155,7 +156,7 @@ namespace LibraryProject.Data
 
             modelBuilder.Entity<WaitingList>(entity =>
             {
-                entity.ToTable("WAITINGLIST", "SHTILMAN");
+                entity.ToTable("WAITINGLIST", "PERSTIN");
                 entity.HasKey(e => e.WaitingListId);
                 entity.HasIndex(e => new { e.Username, e.BookId })
                     .IsUnique()
@@ -163,7 +164,7 @@ namespace LibraryProject.Data
                 entity.Property(e => e.WaitingListId)
                     .HasColumnName("WAITINGLISTID")
                     .ValueGeneratedOnAdd()
-                    .HasDefaultValueSql("SHTILMAN.WAITINGLIST_SEQ.NEXTVAL");
+                    .HasDefaultValueSql("PERSTIN.WAITINGLIST_SEQ.NEXTVAL");
                 entity.Property(e => e.Username).HasColumnName("USERNAME");
                 entity.Property(e => e.BookId).HasColumnName("BOOKID");
                 entity.Property(e => e.JoinDate)
@@ -179,12 +180,12 @@ namespace LibraryProject.Data
             
             modelBuilder.Entity<Contact>(entity =>
             {
-                entity.ToTable("CONTACTS", "SHTILMAN");
+                entity.ToTable("CONTACTS", "PERSTIN");
                 entity.HasKey(e => e.ContactId);
                 entity.Property(e => e.ContactId)
                     .HasColumnName("CONTACT_ID")
                     .ValueGeneratedOnAdd()
-                    .HasDefaultValueSql("SHTILMAN.CONTACTS_SEQ.NEXTVAL");
+                    .HasDefaultValueSql("PERSTIN.CONTACTS_SEQ.NEXTVAL");
                 entity.Property(e => e.FullName)
                     .HasColumnName("FULL_NAME")
                     .IsRequired();

@@ -28,6 +28,7 @@ public class HomeController : Controller
         ViewBag.Role = 0;
         ViewBag.isLogged = 0;
         ViewBag.CanReview = false;
+        ViewBag.IsPasswordChanged = 0;
 
         if (username != null)
         {
@@ -42,6 +43,11 @@ public class HomeController : Controller
             if (hasOrders)
             {
                 ViewBag.CanReview = true;
+            }
+
+            if (user.IsPasswordChanged == 1)
+            {
+                ViewBag.IsPasswordChanged = 1;
             }
         }
 
@@ -77,7 +83,7 @@ public class HomeController : Controller
         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
         {
             await connection.OpenAsync();
-            using (var command = new OracleCommand("SELECT SHTILMAN.SITEREVIEWS_SEQ.NEXTVAL FROM DUAL", connection))
+            using (var command = new OracleCommand("SELECT PERSTIN.SITEREVIEWS_SEQ.NEXTVAL FROM DUAL", connection))
             {
                 nextReviewId = Convert.ToInt32(await command.ExecuteScalarAsync());
             }
@@ -126,7 +132,7 @@ public class HomeController : Controller
             using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
             {
                 await connection.OpenAsync();
-                using var command = new OracleCommand("SELECT SHTILMAN.CONTACTS_SEQ.NEXTVAL FROM DUAL", connection);
+                using var command = new OracleCommand("SELECT PERSTIN.CONTACTS_SEQ.NEXTVAL FROM DUAL", connection);
                 nextId = Convert.ToInt32(await command.ExecuteScalarAsync());
             }
 

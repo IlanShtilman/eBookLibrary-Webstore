@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using LibraryProject.Data;
 using LibraryProject.Data.Enums;
 using LibraryProject.Models;
@@ -9,7 +11,8 @@ namespace LibraryProject.Controllers;
 public class UserController : Controller
 {
     private readonly MVCProjectContext _context;
-
+    
+    [ActivatorUtilitiesConstructor]
     public UserController(MVCProjectContext context)
     {
         _context = context;
@@ -34,12 +37,91 @@ public class UserController : Controller
         }
     }
 
-    public ActionResult ChangePassword(string password, string newPass, string newPassConfirm)
+    public async Task<IActionResult> ChangePassword(string Email)
     {
-        // An action for changing user's password that logged in.
-        return View("ChangePassword");
-
+        if (string.IsNullOrEmpty(Email))
+        {
+            // This is for the initial GET request - just show the form
+            return View();
+        }
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
+        if (user == null)
+        {
+            return Json(new { success = false, message = "Email address does not exist in our system." });
+        }
+    
+        string newPassword = GenerateSecurePassword();
+        try
+        {
+            // Update user's password in database with encrypted version
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.IsPasswordChanged = 1;
+            await _context.SaveChangesAsync();
+            // Send email with new password
+            EmailSender emailSender = new EmailSender();
+            string emailSubject = "Password Change";
+            string emailMessage = $"Your new password is: {newPassword}\n\nPlease change your password after logging in for security purposes.";
+    
+            emailSender.SendEmail(emailSubject, user.Username, emailMessage).Wait();
+            return Json(new { success = true, message = "New password has been sent to your email." });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while processing your request." });
+        }
     }
+
+    [HttpGet]
+    public IActionResult NewPassword()
+    {
+        return View();
+    }
+    
+    
+    [HttpPost]
+    public async Task<IActionResult> NewPassword(string CurrentPassword, string NewPassword, string ConfirmPassword)
+    {
+        if (string.IsNullOrEmpty(CurrentPassword) || string.IsNullOrEmpty(NewPassword) || string.IsNullOrEmpty(ConfirmPassword))
+        {
+            return Json(new { success = false, message = "All fields are required." });
+        }
+
+        if (NewPassword != ConfirmPassword)
+        {
+            return Json(new { success = false, message = "New password and confirmation password do not match." });
+        }
+
+        // Add password validation
+        var passwordRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[A-Za-z\d!@#\$%\^&\*]{8,}$");
+        if (!passwordRegex.IsMatch(NewPassword))
+        {
+            return Json(new { success = false, message = "Password must contain at least one uppercase letter, one number, one special character (!,@,#, etc.), and lowercase letters, and be at least 8 characters long." });
+        }
+
+        string username = HttpContext.Session.GetString("Username");
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null)
+        {
+            return Json(new { success = false, message = "User not found." });
+        }
+
+        // Verify current password
+        if (!BCrypt.Net.BCrypt.Verify(CurrentPassword, user.Password))
+        {
+            return Json(new { success = false, message = "Current password is incorrect." });
+        }
+
+        // Update password
+        user.Password = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+        user.IsPasswordChanged = 0;
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Your password has been changed successfully." });
+    }
+
+    
+    
+    
     // Register Get/Post
     [HttpGet]
     public IActionResult Register()
@@ -191,5 +273,32 @@ public class UserController : Controller
         ViewBag.Reviews = reviews;
 
         return View(user);
+    }
+    
+    private string GenerateSecurePassword()
+    {
+        const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+
+        Random random = new Random();
+        var password = new StringBuilder();
+
+        // Ensure at least one of each required character type
+        password.Append(upperCase[random.Next(upperCase.Length)]);  // Capital letter
+        password.Append(lowerCase[random.Next(lowerCase.Length)]);  // Lowercase letter
+        password.Append(digits[random.Next(digits.Length)]);        // Number
+        password.Append(special[random.Next(special.Length)]);      // Special character
+
+        // Fill remaining length (total 8 characters) with random chars from all types
+        string allChars = upperCase + lowerCase + digits + special;
+        for (int i = 4; i < 8; i++)
+        {
+            password.Append(allChars[random.Next(allChars.Length)]);
+        }
+
+        // Shuffle the password characters
+        return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
     }
 }

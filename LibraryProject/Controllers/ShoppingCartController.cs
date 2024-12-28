@@ -514,7 +514,7 @@ public class ShoppingCartController : Controller
                         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
                         {
                             await connection.OpenAsync();
-                            using (var command = new OracleCommand("SELECT SHTILMAN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
+                            using (var command = new OracleCommand("SELECT PERSTIN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
                             {
                                 nextOrderId = Convert.ToInt32(await command.ExecuteScalarAsync());
                             }
@@ -590,6 +590,40 @@ public class ShoppingCartController : Controller
                         }
                         _context.ShoppingCarts.RemoveRange(cartItems);
                         await _context.SaveChangesAsync();
+                        
+                        
+                        var subject = $"Order Confirmation - Order #{nextOrderId}";
+                        var messageBuilder = new StringBuilder();
+                        messageBuilder.AppendLine($"Thank you for your order #{nextOrderId}!");
+                        messageBuilder.AppendLine("\nOrder Details:");
+
+                        foreach (var item in cartItems)
+                        {
+                            messageBuilder.AppendLine($"\nBook ID: {item.BookId}");
+                            messageBuilder.AppendLine($"Action: {item.Action}");
+                            messageBuilder.AppendLine($"Quantity: {item.Quantity}");
+                            messageBuilder.AppendLine($"Price: ${item.Price}");
+    
+                            if (item.Action == "Borrow")
+                            {
+                                messageBuilder.AppendLine($"Return Date: {DateTime.Now.AddDays(30):yyyy-MM-dd}");
+                            }
+                        }
+
+                        var totalAmount = cartItems.Sum(item => item.Price * item.Quantity);
+                        messageBuilder.AppendLine($"\nTotal Amount Inc. taxes: ${totalAmount + 10}");
+
+                        try 
+                        {
+                            var emailSender = new EmailSender();
+                            emailSender.SendEmail(subject, username, messageBuilder.ToString()).Wait();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log error but continue with order completion
+                            Console.WriteLine($"Failed to send email: {ex.Message}");
+                        }
+                        
                         
                         // SAVE ORDER IN DB!!!
                         return new JsonResult(new
