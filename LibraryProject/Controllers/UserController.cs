@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
 using LibraryProject.Data;
@@ -5,6 +6,7 @@ using LibraryProject.Data.Enums;
 using LibraryProject.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Oracle.ManagedDataAccess.Client;
 
 namespace LibraryProject.Controllers;
 
@@ -266,7 +268,26 @@ public class UserController : Controller
                 })
             .OrderBy(w => w.Position)
             .ToListAsync();
-
+        
+        var userBooks = await _context.Orders
+            .Where(o => o.Username == username && 
+                        (o.IsRemoved == null || o.IsRemoved == 0))  // Only show non-removed books
+            .Join(_context.Books,
+                order => order.BookId,
+                book => book.BookId,
+                (order, book) => new
+                {
+                    BookId = book.BookId,
+                    Title = book.Title,
+                    Author = book.Author,
+                    ImageUrl = book.ImageUrl,
+                    Action = order.Action,
+                    BorrowEndDate = order.BorrowEndDate,
+                    OrderDate = order.OrderDate
+                })
+            .Distinct()
+            .ToListAsync();
+        ViewBag.UserBooks = userBooks;
         ViewBag.WaitingList = waitingList;
         ViewBag.TotalOrders = totalOrders;
         ViewBag.Orders = orders;
@@ -300,5 +321,55 @@ public class UserController : Controller
 
         // Shuffle the password characters
         return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> DeleteUserBook(int bookId)
+    {
+        string username = HttpContext.Session.GetString("Username");
+    
+        using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
+        {
+            await connection.OpenAsync();
+            using (var command = new OracleCommand(
+                       "UPDATE SHTILMAN.ORDERS SET ISREMOVED = :IsRemoved " +
+                       "WHERE USERNAME = :Username AND BOOKID = :BookId AND ACTION = 'Buy'",
+                       connection))
+            {
+                command.Parameters.Add(new OracleParameter
+                {
+                    ParameterName = "IsRemoved",
+                    OracleDbType = OracleDbType.Int32,
+                    Value = 1,
+                    Direction = ParameterDirection.Input
+                });
+
+                command.Parameters.Add(new OracleParameter
+                {
+                    ParameterName = "Username",
+                    OracleDbType = OracleDbType.Varchar2,
+                    Size = 20,  // Match your column size
+                    Value = username,
+                    Direction = ParameterDirection.Input
+                });
+
+                command.Parameters.Add(new OracleParameter
+                {
+                    ParameterName = "BookId",
+                    OracleDbType = OracleDbType.Int32,
+                    Value = bookId,
+                    Direction = ParameterDirection.Input
+                });
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                Console.WriteLine($"Rows affected: {rowsAffected}");
+            
+                if (rowsAffected > 0)
+                {
+                    return Json(new { success = true });
+                }
+                return Json(new { success = false, message = "Book not found" });
+            }
+        }
     }
 }
