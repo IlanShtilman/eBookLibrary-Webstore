@@ -140,6 +140,61 @@
             }
         </div>
 
+        <!-- My Books -->
+        <div class="profile-section">
+            <h2><i class="fas fa-book"></i> My Library</h2>
+            @if (ViewBag.UserBooks != null && ((IEnumerable<dynamic>)ViewBag.UserBooks).Any())
+            {
+                <div class="books-grid">
+                    @foreach (var book in ViewBag.UserBooks)
+                    {
+                        <div class="book-card" data-bookid="@book.BookId">
+                            <div class="book-image-container">
+                                <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/Bookcovers/{book.ImageUrl}")"
+                                     alt="@book.Title"
+                                     class="book-image">
+                            </div>
+                            <div class="book-details">
+                                <h4>@book.Title</h4>
+                                <p class="author">By @book.Author</p>
+                                <div class="book-status">
+                                    @if (book.Action == "Borrow")
+                                    {
+                                        if (book.BorrowEndDate != null)
+                                        {
+                                            var daysLeft = (book.BorrowEndDate - DateTime.Now).Days;
+                                            if (daysLeft > 0)
+                                            {
+                                                <span class="time-remaining">@daysLeft days remaining</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="expired">Expired</span>
+                                            }
+                                        }
+                                    }
+                                    else
+                                        @if (book.Action == "Buy")
+                                        {
+                                        <button type="button" class="delete-book" data-bookid="@book.BookId" title="Remove Book">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                        }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <p>Your library is empty</p>
+                </div>
+            }
+        </div>
+
         <!-- Reviews -->
         <div class="profile-section">
             <h2><i class="fas fa-star"></i> My Reviews</h2>
@@ -213,5 +268,8 @@
     <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
 </div>
 
+@section Scripts {
+    <script src="~/js/Profile.js" asp-append-version="true"></script>
+}
 
 

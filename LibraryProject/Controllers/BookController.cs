@@ -146,7 +146,7 @@ public class BookController : Controller
         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
         {
             await connection.OpenAsync();
-            using (var command = new OracleCommand("SELECT PERSTIN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
+            using (var command = new OracleCommand("SELECT SHTILMAN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
             {
                 nextBookId = Convert.ToInt32(await command.ExecuteScalarAsync());
             }
