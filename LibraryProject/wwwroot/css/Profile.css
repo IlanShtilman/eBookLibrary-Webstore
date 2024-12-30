@@ -346,6 +346,9 @@
 
 .book-details {
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .book-details h4 {
@@ -364,7 +367,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
 }
 
 .time-remaining {
@@ -393,6 +397,43 @@
 
 .delete-book:hover {
     color: #bd2130;
+}
+
+/*Formats Section*/
+.book-formats {
+    display: flex;
+    flex-wrap: wrap;  
+    gap: 8px;
+    padding-top: 5px;
+}
+
+.format-btn {
+    padding: 6px 12px;
+    border: 1px solid #4682b4;  
+    border-radius: 4px;
+    background-color: white;
+    color: #4682b4;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.format-btn:hover {
+    background-color: #4682b4;
+    color: white;
+}
+
+.format-btn i {
+    font-size: 1em;
+}
+
+.formats-list {
+    margin: 10px 0;
+    color: #666;
+    font-size: 0.9em;
 }
 
 /* Responsive Design */
