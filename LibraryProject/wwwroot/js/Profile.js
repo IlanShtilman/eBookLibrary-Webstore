@@ -13,37 +13,31 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function deleteBook(bookId) {
-    console.log('Starting delete process for bookId:', bookId);
+    console.log('Sending bookId:', bookId); // Debug log
     if (confirm('Are you sure you want to remove this book from your library?')) {
-        console.log('Delete confirmed for bookId:', bookId);
         fetch('/User/DeleteUserBook', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ bookId: parseInt(bookId) })
+            body: JSON.stringify({ "bookId": bookId }) // Make sure property name matches parameter name
         })
-            .then(response => {
-                console.log('Server response:', response);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
-                    const bookCard = document.querySelector(`.book-card[data-bookid="${bookId}"]`);
-                    if (bookCard) {
-                        bookCard.style.opacity = '0';
-                        setTimeout(() => {
-                            bookCard.remove();
-                        }, 300);
-                    }
+                    window.location.reload();
                 } else {
                     alert(data.message || 'Error removing book');
                 }
             })
             .catch(error => {
-                console.error('Error in delete process:', error);
+                console.error('Error:', error);
                 alert('Error removing book');
             });
     }
+}
+
+function downloadFormat(bookId, title, format) {
+    // Using window.location.href for direct download
+    window.location.href = `/User/DownloadBook?bookId=${bookId}&title=${encodeURIComponent(title)}&format=${format}`;
 }

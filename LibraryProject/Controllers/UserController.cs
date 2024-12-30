@@ -13,7 +13,7 @@ namespace LibraryProject.Controllers;
 public class UserController : Controller
 {
     private readonly MVCProjectContext _context;
-    
+
     [ActivatorUtilitiesConstructor]
     public UserController(MVCProjectContext context)
     {
@@ -25,7 +25,7 @@ public class UserController : Controller
         var users = await _context.Users.ToListAsync();
         return View(users);
     }
-    
+
     public ActionResult ViewUser(User user)
     {
         // An action for viewing user profile that logged in.
@@ -46,12 +46,13 @@ public class UserController : Controller
             // This is for the initial GET request - just show the form
             return View();
         }
+
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
         if (user == null)
         {
             return Json(new { success = false, message = "Email address does not exist in our system." });
         }
-    
+
         string newPassword = GenerateSecurePassword();
         try
         {
@@ -62,8 +63,9 @@ public class UserController : Controller
             // Send email with new password
             EmailSender emailSender = new EmailSender();
             string emailSubject = "Password Change";
-            string emailMessage = $"Your new password is: {newPassword}\n\nPlease change your password after logging in for security purposes.";
-    
+            string emailMessage =
+                $"Your new password is: {newPassword}\n\nPlease change your password after logging in for security purposes.";
+
             emailSender.SendEmail(emailSubject, user.Username, emailMessage).Wait();
             return Json(new { success = true, message = "New password has been sent to your email." });
         }
@@ -78,12 +80,13 @@ public class UserController : Controller
     {
         return View();
     }
-    
-    
+
+
     [HttpPost]
     public async Task<IActionResult> NewPassword(string CurrentPassword, string NewPassword, string ConfirmPassword)
     {
-        if (string.IsNullOrEmpty(CurrentPassword) || string.IsNullOrEmpty(NewPassword) || string.IsNullOrEmpty(ConfirmPassword))
+        if (string.IsNullOrEmpty(CurrentPassword) || string.IsNullOrEmpty(NewPassword) ||
+            string.IsNullOrEmpty(ConfirmPassword))
         {
             return Json(new { success = false, message = "All fields are required." });
         }
@@ -97,7 +100,12 @@ public class UserController : Controller
         var passwordRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[A-Za-z\d!@#\$%\^&\*]{8,}$");
         if (!passwordRegex.IsMatch(NewPassword))
         {
-            return Json(new { success = false, message = "Password must contain at least one uppercase letter, one number, one special character (!,@,#, etc.), and lowercase letters, and be at least 8 characters long." });
+            return Json(new
+            {
+                success = false,
+                message =
+                    "Password must contain at least one uppercase letter, one number, one special character (!,@,#, etc.), and lowercase letters, and be at least 8 characters long."
+            });
         }
 
         string username = HttpContext.Session.GetString("Username");
@@ -121,15 +129,16 @@ public class UserController : Controller
         return Json(new { success = true, message = "Your password has been changed successfully." });
     }
 
-    
-    
-    
+
+
+
     // Register Get/Post
     [HttpGet]
     public IActionResult Register()
     {
         return View(new User()); // Pass a new User object
     }
+
     [HttpPost]
     public async Task<IActionResult> Register(User user, string PassConfirm)
     {
@@ -147,7 +156,7 @@ public class UserController : Controller
             ModelState.AddModelError("Email", "Email is already taken");
             return View(user);
         }
-        
+
         if (user.Password != PassConfirm)
         {
             ModelState.AddModelError("Password", "Passwords do not match");
@@ -171,9 +180,10 @@ public class UserController : Controller
                 return View(user);
             }
         }
+
         return View(user);
     }
-    
+
     //Login Get/Post
     [HttpGet]
     public IActionResult Login()
@@ -194,7 +204,7 @@ public class UserController : Controller
 
         // Store username in session
         HttpContext.Session.SetString("Username", user.Username);
-    
+
         return RedirectToAction("Index", "Home");
     }
 
@@ -203,7 +213,7 @@ public class UserController : Controller
         HttpContext.Session.Clear(); // Clear all session data
         return RedirectToAction("Index", "Home");
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> Profile()
     {
@@ -250,16 +260,17 @@ public class UserController : Controller
                     review.CreatedAt
                 })
             .ToListAsync();
-        
+
         var totalOrders = await _context.Orders
             .CountAsync(o => o.Username == username);
-        
+
         var waitingList = await _context.WaitingList
             .Where(w => w.Username == username)
             .Join(_context.Books,
                 w => w.BookId,
                 b => b.BookId,
-                (w, b) => new {
+                (w, b) => new
+                {
                     w.Position,
                     w.JoinDate,
                     BookTitle = b.Title,
@@ -268,10 +279,10 @@ public class UserController : Controller
                 })
             .OrderBy(w => w.Position)
             .ToListAsync();
-        
+
         var userBooks = await _context.Orders
             .Where(o => o.Username == username && 
-                        (o.IsRemoved == null || o.IsRemoved == 0))  // Only show non-removed books
+                        (o.IsRemoved == null || o.IsRemoved == 0))
             .Join(_context.Books,
                 order => order.BookId,
                 book => book.BookId,
@@ -283,19 +294,22 @@ public class UserController : Controller
                     ImageUrl = book.ImageUrl,
                     Action = order.Action,
                     BorrowEndDate = order.BorrowEndDate,
-                    OrderDate = order.OrderDate
+                    OrderDate = order.OrderDate,
+                    // Add these lines:
+                    IsPdfAvailable = book.IsPdfAvailable,
+                    IsEpubAvailable = book.IsEpubAvailable,
+                    IsMobiAvailable = book.IsMobiAvailable,
+                    IsF2bAvailable = book.IsF2bAvailable
                 })
-            .Distinct()
             .ToListAsync();
         ViewBag.UserBooks = userBooks;
         ViewBag.WaitingList = waitingList;
         ViewBag.TotalOrders = totalOrders;
         ViewBag.Orders = orders;
         ViewBag.Reviews = reviews;
-
         return View(user);
     }
-    
+
     private string GenerateSecurePassword()
     {
         const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -307,10 +321,10 @@ public class UserController : Controller
         var password = new StringBuilder();
 
         // Ensure at least one of each required character type
-        password.Append(upperCase[random.Next(upperCase.Length)]);  // Capital letter
-        password.Append(lowerCase[random.Next(lowerCase.Length)]);  // Lowercase letter
-        password.Append(digits[random.Next(digits.Length)]);        // Number
-        password.Append(special[random.Next(special.Length)]);      // Special character
+        password.Append(upperCase[random.Next(upperCase.Length)]); // Capital letter
+        password.Append(lowerCase[random.Next(lowerCase.Length)]); // Lowercase letter
+        password.Append(digits[random.Next(digits.Length)]); // Number
+        password.Append(special[random.Next(special.Length)]); // Special character
 
         // Fill remaining length (total 8 characters) with random chars from all types
         string allChars = upperCase + lowerCase + digits + special;
@@ -322,54 +336,50 @@ public class UserController : Controller
         // Shuffle the password characters
         return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
     }
-    
+
     [HttpPost]
-    public async Task<IActionResult> DeleteUserBook(int bookId)
+    public async Task<IActionResult> DeleteUserBook([FromBody] DeleteBookRequest request)
     {
+        Console.WriteLine($"Received bookId: {request.BookId}"); // Debug log
         string username = HttpContext.Session.GetString("Username");
-    
+
         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
         {
             await connection.OpenAsync();
             using (var command = new OracleCommand(
-                       "UPDATE SHTILMAN.ORDERS SET ISREMOVED = :IsRemoved " +
-                       "WHERE USERNAME = :Username AND BOOKID = :BookId AND ACTION = 'Buy'",
+                       "UPDATE SHTILMAN.ORDERS SET ISREMOVED = 1 " +
+                       "WHERE USERNAME = :Username AND BOOKID = :BookId", 
                        connection))
             {
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "IsRemoved",
-                    OracleDbType = OracleDbType.Int32,
-                    Value = 1,
-                    Direction = ParameterDirection.Input
-                });
-
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "Username",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Size = 20,  // Match your column size
-                    Value = username,
-                    Direction = ParameterDirection.Input
-                });
-
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "BookId",
-                    OracleDbType = OracleDbType.Int32,
-                    Value = bookId,
-                    Direction = ParameterDirection.Input
-                });
-
+                command.Parameters.Add(new OracleParameter("Username", username));
+                command.Parameters.Add(new OracleParameter("BookId", request.BookId));  // Changed from bookId to request.BookId
+        
                 var rowsAffected = await command.ExecuteNonQueryAsync();
-                Console.WriteLine($"Rows affected: {rowsAffected}");
-            
+        
                 if (rowsAffected > 0)
                 {
-                    return Json(new { success = true });
+                    return Json(new { success = true, redirect = true });
                 }
-                return Json(new { success = false, message = "Book not found" });
             }
         }
+
+        return Json(new { success = false, message = "Book not found" });
+    }
+    
+    
+    public class DeleteBookRequest
+    {
+        public int BookId { get; set; }
+    }
+    
+    [HttpGet]
+    public IActionResult DownloadBook(int bookId, string title, string format)
+    {
+        // Create a simple text file with book info
+        var content = $"This is a sample {format.ToUpper()} file for {title}";
+        var fileName = $"{title.Replace(" ", "_")}_{format}.txt";
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(content);
+    
+        return File(bytes, "text/plain", fileName);
     }
 }
