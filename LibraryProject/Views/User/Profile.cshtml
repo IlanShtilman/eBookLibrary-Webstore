@@ -150,7 +150,11 @@
                     {
                         <div class="book-card" data-bookid="@book.BookId">
                             <div class="book-image-container">
-                                <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/Bookcovers/{book.ImageUrl}")"
+                                <img src="@(string.IsNullOrEmpty(book.ImageUrl)
+                                              ? "/images/book-placeholder.jpg"
+                                              : (book.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                                  ? book.ImageUrl
+                                                  : $"/images/Bookcovers/{book.ImageUrl}"))"
                                      alt="@book.Title"
                                      class="book-image">
                             </div>

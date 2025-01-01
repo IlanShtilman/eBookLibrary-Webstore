@@ -165,7 +165,11 @@
             <div class="sf-product-card @book.Genre" data-year="@book.PublishYear" data-age="@book.AgeRestriction">
             <div class="sf-product-card__image-wrapper">
                 <img class="sf-product-card__image"
-                     src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/Bookcovers/{book.ImageUrl}")"
+                     src="@(string.IsNullOrEmpty(book.ImageUrl)
+                              ? "/images/book-placeholder.jpg"
+                              : (book.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                  ? book.ImageUrl
+                                  : $"/images/Bookcovers/{book.ImageUrl}"))"
                      alt="@book.Title" />
                 @if (book.IsAvailableToBorrow && book.AvailableCopies == 0)
                 {
@@ -189,7 +193,8 @@
         <h5 class="sf-product-card__title">@book.Title</h5>
         <p class="sf-product-card__author">by @book.Author</p>
         <p class="sf-product-card__year">Published: @book.PublishYear</p>
-        <p class="sf-product-card__age">Age: @book.AgeRestriction</p>
+        <p class="sf-product-card__age">Age: @(book.AgeRestriction == AgeRestriction.All ? "0" :
+                                                     ((int)book.AgeRestriction * 3) + "+")</p>
         <div class="sf-product-card__prices">
             @if (book.IsOnDiscount)
             {
@@ -214,13 +219,34 @@
                     Buy
                 </button>
             }
-            @if (book.AvailableCopies != 0 && book.AvailableCopies > 0)
+            @{
+                var currentUsername = ViewBag.Username;
+                var reservedUsername = book.ReservedForUsername;
+            }
+            <div style="display:none">
+                Debug: Current User: @currentUsername
+                Reserved For: @reservedUsername
+                Match: @(book.ReservedForUsername == ViewBag.Username)
+            </div>
+            @if (book.IsAvailableToBorrow)
             {
-                <button class="borrow-btn @(book.AvailableCopies <= 0 ? "disabled" : "")"
-                        data-book-id="@book.BookId"
-                        @(book.AvailableCopies <= 0 ? "disabled" : "")>
-                    Borrow
-                </button>
+                @if (book.IsReserved)
+                {
+                    @if (book.ReservedForUsername == ViewBag.Username)
+                    {
+                        <button class="borrow-btn" data-book-id="@book.BookId">
+                            Borrow (Reserved for you - @Math.Floor((book.ReservationExpiry.Value - DateTime.Now).TotalMinutes) minutes left)
+                        </button>
+                    }
+                }
+                else if (book.AvailableCopies > 0)
+                {
+                    <button class="borrow-btn" data-book-id="@book.BookId">Borrow</button>
+                }
+                else
+                {
+                    <button class="queue-btn" data-book-id="@book.BookId">Join Queue</button>
+                }
             }
         </div>
         @if (TempData["ErrorMessage"] != null)

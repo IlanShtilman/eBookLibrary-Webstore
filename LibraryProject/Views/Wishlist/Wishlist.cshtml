@@ -19,7 +19,7 @@
                     <li><a asp-controller="User" asp-action="Login">Profile</a></li>
                 }
                 <li><a asp-controller="Book" asp-action="Store">Store</a></li>
-                <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
+                <li><a asp-controller="Home" asp-action="Index" asp-fragment="Contact">Contact</a></li>
             </ul>
             <div class="nav-icons">
                 <div class="nav-icons">
@@ -69,7 +69,11 @@
                 <div class="wishlist-card" data-book-id="@book.BookId">
                     <div class="wishlist-card__image-wrapper">
                         <img class="wishlist-card__image"
-                             src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/book-placeholder.jpg" : $"/images/BookCovers/{book.ImageUrl}")"
+                             src="@(string.IsNullOrEmpty(book.ImageUrl)
+                                      ? "/images/book-placeholder.jpg"
+                                      : (book.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                          ? book.ImageUrl
+                                          : $"/images/Bookcovers/{book.ImageUrl}"))"
                              alt="@book.Title" />
                     </div>
                     <div class="wishlist-card__content">

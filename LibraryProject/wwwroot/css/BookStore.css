@@ -876,3 +876,22 @@ nav .fas {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     animation: fadeIn 0.3s ease-in;
 }
+
+.reserved-message {
+    color: #e67e22;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.queue-btn {
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.queue-btn:hover {
+    background-color: #7f8c8d;
+}

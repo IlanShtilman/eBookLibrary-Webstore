@@ -141,11 +141,18 @@ public class BookController : Controller
     [HttpPost]
     public async Task<IActionResult> AddBook(Book book)
     {
+        // Check if discounted price is higher than buy price
+        if (book.DiscountedBuyPrice.HasValue && book.DiscountedBuyPrice > book.BuyPrice)
+        {
+            ModelState.AddModelError("DiscountedBuyPrice", "Discounted price cannot be higher than the original price.");
+            return View(book);
+        }
 
         int nextBookId;
         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
         {
             await connection.OpenAsync();
+            // Fixed the SQL command by adding "SELECT"
             using (var command = new OracleCommand("SELECT SHTILMAN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
             {
                 nextBookId = Convert.ToInt32(await command.ExecuteScalarAsync());
@@ -156,6 +163,20 @@ public class BookController : Controller
         {
             try
             {
+                // Set discount dates if discounted price is provided
+                if (book.DiscountedBuyPrice.HasValue)
+                {
+                    // Additional validation to double-check
+                    if (book.DiscountedBuyPrice > book.BuyPrice)
+                    {
+                        ModelState.AddModelError("DiscountedBuyPrice", "Discounted price cannot be higher than the original price.");
+                        return View(book);
+                    }
+
+                    book.DiscountStartDate = DateTime.Now;
+                    book.DiscountEndDate = DateTime.Now.AddDays(7);
+                }
+
                 var newBook = new Book
                 {
                     BookId = nextBookId,
@@ -175,14 +196,19 @@ public class BookController : Controller
                     IsMobiAvailable = book.IsMobiAvailable,
                     IsF2bAvailable = book.IsF2bAvailable,
                     IsPdfAvailable = book.IsPdfAvailable,
+                    DiscountedBuyPrice = book.DiscountedBuyPrice,
+                    DiscountStartDate = book.DiscountStartDate,
+                    DiscountEndDate = book.DiscountEndDate,
+                    ImageUrl = book.ImageUrl ?? "/images/default-book.jpg"
                 };
+
                 _context.Books.Add(newBook);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "An error occured while registering book.");
+                ModelState.AddModelError("", "An error occurred while registering book.");
                 return View(book);
             }
         }
@@ -529,75 +555,90 @@ public class BookController : Controller
     [HttpPost]
     public async Task<IActionResult> BorrowBook([FromBody] int bookId)
     {
-        //int x = bookId;
         string username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
+   
+    if (string.IsNullOrEmpty(username))
+    {
+        return Unauthorized();
+    }
+
+    var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
+    Console.WriteLine($"BorrowBook attempt - BookId: {bookId}, Username: {username}");
+    Console.WriteLine($"Book state - IsReserved: {book.IsReserved}, ReservedFor: {book.ReservedForUsername}");
+    if (book == null)
+    {
+        return NotFound();
+    }
+
+    // Check if book is reserved
+    if (book.IsReserved)
+    {
+        // If reserved for someone else, deny access
+        if (book.ReservedForUsername != username)
         {
-            return Unauthorized();
+            return Json(new { 
+                success = false, 
+                message = "This book is currently reserved for another user." 
+            });
         }
-        
-        // Check if the book has already been borrowed and not returned
-        var alreadyBorrowed = await _context.Orders
-            .AnyAsync(o => o.BookId == bookId && o.Username == username && o.IsReturned == 0);
 
-        if (alreadyBorrowed)
+        // If reservation has expired, deny access
+        if (book.ReservationExpiry < DateTime.Now)
         {
-            return Json(new { success = false, message = "You have already borrowed this book and not returned it yet." });
-        }
-
-        // Check if book already exists in cart with any action
-        var existingInCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc =>
-            sc.BookId == bookId &&
-            sc.Username == username);
-
-        if (existingInCart != null)
-        {
-            return Json(new { success = false, message = "This book is already in your cart." });
-        }
-
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-
-        // Count both current borrowed books and books in shopping cart marked for borrowing
-        var borrowedCount = await _context.ShoppingCarts
-            .CountAsync(sc => sc.Username == username && sc.Action == "Borrow");
-        
-        if (borrowedCount < 3)
-        {
-            var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc =>
-                sc.BookId == book.BookId &&
-                sc.Username == username &&
-                sc.Action == "Borrow");
-
-            if (ExistsShoppingCart != null)
-            {
-                ExistsShoppingCart.Quantity += 1;
-                ExistsShoppingCart.Price += book.BorrowPrice;
-            }
-            else
-            {
-                var shoppingCart = new ShoppingCart
-                {
-                    Username = username,
-                    BookId = bookId,
-                    Action = "Borrow",
-                    Quantity = 1,
-                    Price = book.BorrowPrice
-                };
-                _context.ShoppingCarts.Add(shoppingCart);
-            }
-
-            book.AvailableCopies--;
-            user.MaxBorrowed++;
-            await _context.SaveChangesAsync();
-            //return View("BookStore");
-            return Json(new { success = true, message = "Book successfully added to cart!" });
-        }
-        else
-        {
-            return Json(new { success = false, message = "You have reached the maximum limit of 3 borrowed books." });
+            return Json(new { 
+                success = false, 
+                message = "Your reservation has expired." 
+            });
         }
     }
+
+    // Check if the book has already been borrowed and not returned
+    var alreadyBorrowed = await _context.Orders
+        .AnyAsync(o => o.BookId == bookId && o.Username == username && o.IsReturned == 0);
+
+    if (alreadyBorrowed)
+    {
+        return Json(new { 
+            success = false, 
+            message = "You have already borrowed this book and not returned it yet." 
+        });
+    }
+    
+    var borrowedCount = await _context.ShoppingCarts
+        .CountAsync(sc => sc.Username == username && sc.Action == "Borrow");
+        
+    if (borrowedCount >= 3)
+    {
+        return Json(new { 
+            success = false, 
+            message = "You have reached the maximum limit of 3 borrowed books." 
+        });
+    }
+
+    // Add to shopping cart
+    var shoppingCart = new ShoppingCart
+    {
+        Username = username,
+        BookId = bookId,
+        Action = "Borrow",
+        Quantity = 1,
+        Price = book.BorrowPrice
+    };
+
+    _context.ShoppingCarts.Add(shoppingCart);
+    book.AvailableCopies--;
+
+    // If this was a reserved book, clear the reservation
+    if (book.IsReserved && book.ReservedForUsername == username)
+    {
+        book.IsReserved = false;
+        book.ReservedForUsername = null;
+        book.ReservationExpiry = null;
+    }
+
+    await _context.SaveChangesAsync();
+    return Json(new { success = true, message = "Book successfully added to cart!" });
+}
 
     [HttpPost]
     public async Task<IActionResult> AddToWaitingList([FromBody] int bookId)

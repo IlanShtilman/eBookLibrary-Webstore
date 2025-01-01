@@ -66,6 +66,17 @@ document.addEventListener('DOMContentLoaded', function() {
         bookCount.textContent = `Showing ${books.length} books`;
 
         books.forEach(book => {
+            const borrowButton = book.isAvailableToBorrow
+                ? (book.isReserved
+                    ? (book.reservedForUsername === currentUsername  // currentUsername needs to be passed from controller
+                        ? `<button class="borrow-btn" data-book-id="${book.bookId}">
+                 Borrow Now (Reserved for you - Expires in ${Math.floor((new Date(book.reservationExpiry) - new Date()) / 60000)} minutes)
+               </button>`
+                        : `<div class="reserved-message">Reserved for another user</div>`)
+                    : book.availableCopies > 0
+                        ? `<button class="borrow-btn" data-book-id="${book.bookId}">Borrow</button>`
+                        : `<button class="queue-btn" data-book-id="${book.bookId}">Join Queue</button>`)
+                : '';
             const isInWishlist = currentWishlistItems.includes(book.bookId);
             const heartClass = isInWishlist ? "fas active" : "far";
 
@@ -78,13 +89,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 : `<p class="price">Buy: $${book.buyPrice.toFixed(2)}</p>`;
 
             const bookCard = `
-            <div class="sf-product-card ${book.genre}" data-year="${book.publishYear}" data-age="${book.ageRestriction}">
-                <div class="sf-product-card__image-wrapper">
-                    <img class="sf-product-card__image" 
-                         src="${book.imageUrl ? `/images/BookCovers/${book.imageUrl}` : '/images/book-placeholder.jpg'}"
-                         alt="${book.title}"
-                         onerror="this.onerror=null; this.src='/images/book-placeholder.jpg';"
-                    />
+                <div class="sf-product-card ${book.genre}" data-year="${book.publishYear}" data-age="${book.ageRestriction}">
+                    <div class="sf-product-card__image-wrapper">
+                        <img class="sf-product-card__image" 
+                             src="${book.imageUrl
+                            ? (book.imageUrl.startsWith('http')
+                                ? book.imageUrl
+                                : `/images/BookCovers/${book.imageUrl}`)
+                            : '/images/book-placeholder.jpg'}"
+                             alt="${book.title}"
+                             onerror="this.onerror=null; this.src='/images/book-placeholder.jpg';"
+                        />
                     ${book.isAvailableToBorrow && book.availableCopies === 0 ?
                 `<div class="sf-product-card__queue" data-book-id="${book.bookId}" title="Join Waiting List For Borrow">
         <i class="fas fa-clock"></i>

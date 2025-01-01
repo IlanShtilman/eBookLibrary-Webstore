@@ -17,9 +17,9 @@
         <nav>
             <ul id="sideMenu">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                <li><a asp-controller="About" asp-action="Index">Profile</a></li>
+                <li><a asp-controller="User" asp-action="Profile">Profile</a></li>
                 <li><a asp-controller="Book" asp-action="Store">Store</a></li>
-                <li><a asp-controller="Home" asp-action="Index">Contact</a></li>
+                <li><a asp-controller="Home" asp-action="Index" asp-fragment="Contact">Contact</a></li>
             </ul>
             <div class="nav-icons">
                 <div class="nav-icons">
@@ -143,13 +143,7 @@
                     </div>
 
                     <form>
-                        <input type="text" class="form-control" placeholder="Cardholder's Name">
-                        <input type="text" class="form-control" placeholder="Card Number">
-                        <div class="form-row">
-                            <input type="text" class="form-control" placeholder="MM/YYYY">
-                            <input type="text" class="form-control" placeholder="CVV">
-                        </div>
-
+                        
                         <div class="summary">
                             <div class="summary-item">
                                 <span>Subtotal</span>
@@ -164,12 +158,6 @@
                                 <span>$@(Model.Sum(x => (decimal)x.Price) + 10)</span>
                             </div>
                         </div>
-                        @*
-                        <button class="checkout-btn">
-                            <span>$@(Model.Sum(x => (decimal)x.Price) + 10)</span>
-                            <span>Checkout <i class="fas fa-arrow-right"></i></span>
-                        </button>
-                        *@
                         <div id="paypal-button-container"></div>
                         <input type="hidden" id="totalAmount" value="@((Model.Sum(x => (decimal)x.Price) + 10).ToString("0.00"))"/>
                     </form>

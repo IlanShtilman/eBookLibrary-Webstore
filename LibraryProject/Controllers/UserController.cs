@@ -13,11 +13,13 @@ namespace LibraryProject.Controllers;
 public class UserController : Controller
 {
     private readonly MVCProjectContext _context;
+    private readonly BookReturnHandler _bookReturnHandler;
 
     [ActivatorUtilitiesConstructor]
-    public UserController(MVCProjectContext context)
+    public UserController(MVCProjectContext context, IConfiguration configuration)
     {
         _context = context;
+        _bookReturnHandler = new BookReturnHandler(context, configuration);
     }
 
     public async Task<IActionResult> Index()
@@ -129,9 +131,7 @@ public class UserController : Controller
         return Json(new { success = true, message = "Your password has been changed successfully." });
     }
 
-
-
-
+    
     // Register Get/Post
     [HttpGet]
     public IActionResult Register()
@@ -275,19 +275,19 @@ public class UserController : Controller
         .OrderBy(w => w.Position)
         .ToListAsync();
     // Handle expired orders
+    // Handle expired orders
     var currentTime = DateTime.Now;
     var expiredOrders = await _context.Orders
         .Where(o => o.BorrowEndDate <= currentTime && o.IsReturned == 0)
         .ToListAsync();
+
     foreach (var order in expiredOrders)
     {
         order.IsReturned = 1;
-        order.IsRemoved = 1; // Add this line to mark as removed
-        var book = await _context.Books.FindAsync(order.BookId);
-        if (book != null)
-        {
-            book.AvailableCopies += 1;
-        }
+        order.IsRemoved = 1;
+        
+        // Handle waiting list for this book
+        await _bookReturnHandler.HandleBookReturn(order.BookId);
     }
     
     if (expiredOrders.Any())

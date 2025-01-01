@@ -32,6 +32,11 @@ public class Book
     
     public string? ImageUrl { get; set; }
     
+    public bool IsReserved { get; set; }
+    
+    public string? ReservedForUsername { get; set; }
+    public DateTime? ReservationExpiry { get; set; }
+    
     // These are computed properties - we don't store them in the database
     [NotMapped]
     public bool IsOnDiscount => 

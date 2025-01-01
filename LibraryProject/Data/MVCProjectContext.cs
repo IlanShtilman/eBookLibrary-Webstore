@@ -81,6 +81,13 @@ namespace LibraryProject.Data
                 entity.Property(e => e.DiscountStartDate).HasColumnName("DISCOUNTSTARTDATE"); 
                 entity.Property(e => e.DiscountEndDate).HasColumnName("DISCOUNTENDDATE");
                 entity.Property(e => e.ImageUrl).HasColumnName("IMAGEURL");
+                entity.Property(e => e.IsReserved)
+                    .HasColumnName("ISRESERVED")
+                    .HasDefaultValue(false);
+                entity.Property(e => e.ReservedForUsername)
+                    .HasColumnName("RESERVEDFORUSERNAME");
+                entity.Property(e => e.ReservationExpiry)
+                    .HasColumnName("RESERVATIONEXPIRY");
             });
 
             modelBuilder.Entity<Review>(entity =>

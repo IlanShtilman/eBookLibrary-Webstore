@@ -15,13 +15,6 @@
 <div class="form-container">
     <form asp-action="AddBook" method="post" id="addBookForm" class="book-form">
         <div class="form-grid">
-            @*
-            <div class="form-group">
-                <label asp-for="BookId">Book ID</label>
-                <input asp-for="BookId" class="form-control" placeholder="Enter Book ID"/>
-                <span asp-validation-for="BookId" class="text-danger"></span>
-            </div>
-            *@
             <div class="form-group">
                 <label asp-for="Title">Title</label>
                 <input asp-for="Title" class="form-control" placeholder="Enter book title"/>
@@ -42,7 +35,6 @@
                     <option value="Non-Fiction">Non-Fiction</option>
                     <option value="Science">Science</option>
                     <option value="Technology">Technology</option>
-                    <!-- Add more genres as needed -->
                 </select>
                 <span asp-validation-for="Genre" class="text-danger"></span>
             </div>
@@ -50,12 +42,11 @@
             <div class="form-group">
                 <label asp-for="AgeRestriction">Age Restriction</label>
                 <select asp-for="AgeRestriction" class="form-control">
-                    <option value="">Select Genre</option>
+                    <option value="">Select Age Restriction</option>
                     <option value="All">All</option>
                     <option value="ThreePlus">ThreePlus</option>
                     <option value="SevenPlus">SevenPlus</option>
                     <option value="TwelvePlus">TwelvePlus</option>
-                    <!-- Add more genres as needed -->
                 </select>
                 <span asp-validation-for="AgeRestriction" class="text-danger"></span>
             </div>
@@ -74,8 +65,15 @@
 
             <div class="form-group">
                 <label asp-for="BuyPrice">Buy Price</label>
-                <input asp-for="BuyPrice" class="form-control" type="number" step="0.01" min="0"/>
+                <input asp-for="BuyPrice" class="form-control" type="number" step="0.01" min="0" id="buyPrice"/>
                 <span asp-validation-for="BuyPrice" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DiscountedBuyPrice">Discounted Buy Price (Optional)</label>
+                <input asp-for="DiscountedBuyPrice" class="form-control" type="number" step="0.01" min="0" id="discountedBuyPrice"/>
+                <span asp-validation-for="DiscountedBuyPrice" class="text-danger"></span>
+                <small class="text-muted">Leave empty if no discount applies</small>
             </div>
 
             <div class="form-group">
@@ -83,36 +81,16 @@
                 <input asp-for="BorrowPrice" class="form-control" type="number" step="0.01" min="0"/>
                 <span asp-validation-for="BorrowPrice" class="text-danger"></span>
             </div>
-            @*
+
             <div class="form-group">
-                <label asp-for="TotalCopies">Total Copies</label>
-                <input asp-for="TotalCopies" class="form-control" type="number" min="0"/>
-                <span asp-validation-for="TotalCopies" class="text-danger"></span>
+                <label asp-for="ImageUrl">Book Cover Image URL</label>
+                <input asp-for="ImageUrl" class="form-control" type="url" placeholder="Enter image URL"/>
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <small class="text-muted">Enter a valid image URL for the book cover</small>
             </div>
-            *@
-            @*
-            <div class="form-group">
-                <label asp-for="AvailableCopies">Available Copies</label>
-                <input asp-for="AvailableCopies" class="form-control" type="number" min="0"/>
-                <span asp-validation-for="AvailableCopies" class="text-danger"></span>
-            </div>
-            *@
         </div>
 
         <div class="form-options">
-            @*
-            <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <input asp-for="IsAvailableToBuy" class="form-check-input" type="checkbox"/>
-                    <label asp-for="IsAvailableToBuy">Available to Buy</label>
-                </div>
-
-                <div class="checkbox-item">
-                    <input asp-for="IsAvailableToBorrow" class="form-check-input" type="checkbox"/>
-                    <label asp-for="IsAvailableToBorrow">Available to Borrow</label>
-                </div>
-            </div>
-            *@
             <div class="formats-group">
                 <h3>Available Formats</h3>
                 <div class="format-options">

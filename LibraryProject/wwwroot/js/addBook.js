@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addBookForm');
     const inputs = form.querySelectorAll('input[type="number"]');
+    const buyPriceInput = document.getElementById('buyPrice');
+    const discountedPriceInput = document.getElementById('discountedBuyPrice');
 
     // Add animation class to form groups on focus
     document.querySelectorAll('.form-group').forEach(group => {
@@ -38,28 +40,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Ensure Available Copies doesn't exceed Total Copies
-    const totalCopiesInput = form.querySelector('[name="TotalCopies"]');
-    const availableCopiesInput = form.querySelector('[name="AvailableCopies"]');
+    // Enhanced discount price validation
+    if (discountedPriceInput && buyPriceInput) {
+        function validateDiscountPrice() {
+            const buyPrice = parseFloat(buyPriceInput.value) || 0;
+            const discountPrice = parseFloat(discountedPriceInput.value) || 0;
 
-    if (totalCopiesInput && availableCopiesInput) {
-        availableCopiesInput.addEventListener('input', function() {
-            const totalCopies = parseInt(totalCopiesInput.value) || 0;
-            const availableCopies = parseInt(this.value) || 0;
-
-            if (availableCopies > totalCopies) {
-                this.value = totalCopies;
+            if (discountPrice > 0 && discountPrice >= buyPrice) {
+                discountedPriceInput.setCustomValidity('Discounted price must be lower than the buy price');
+                showMessage('Discounted price must be lower than the buy price', 'error');
+                return false;
+            } else {
+                discountedPriceInput.setCustomValidity('');
+                return true;
             }
-        });
+        }
 
-        totalCopiesInput.addEventListener('input', function() {
-            const totalCopies = parseInt(this.value) || 0;
-            const availableCopies = parseInt(availableCopiesInput.value) || 0;
-
-            if (availableCopies > totalCopies) {
-                availableCopiesInput.value = totalCopies;
-            }
-        });
+        discountedPriceInput.addEventListener('input', validateDiscountPrice);
+        discountedPriceInput.addEventListener('change', validateDiscountPrice);
+        buyPriceInput.addEventListener('change', validateDiscountPrice);
     }
 
     // Form submission handling
@@ -75,12 +74,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (input && !input.value.trim()) {
                 isValid = false;
                 input.classList.add('invalid');
+                showMessage(`Please enter a ${field.toLowerCase()}`, 'error');
             }
         });
 
         if (!isValid) {
-            showMessage('Please fill in all required fields', 'error');
             return;
+        }
+
+        // Enhanced discount price validation before submission
+        const buyPrice = parseFloat(buyPriceInput.value) || 0;
+        const discountPrice = parseFloat(discountedPriceInput.value) || 0;
+
+        if (discountPrice > 0 && discountPrice >= buyPrice) {
+            showMessage('Discounted price must be lower than the buy price', 'error');
+            return;
+        }
+
+        // Validate image URL if provided
+        const imageUrlInput = form.querySelector('[name="ImageUrl"]');
+        if (imageUrlInput && imageUrlInput.value) {
+            try {
+                new URL(imageUrlInput.value);
+            } catch (e) {
+                showMessage('Please enter a valid image URL', 'error');
+                return;
+            }
         }
 
         // If validation passes, submit the form
@@ -90,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper function to show messages
     function showMessage(message, type) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `${type}-message`;
+        messageDiv.className = `message ${type}-message`;
         messageDiv.textContent = message;
 
         const container = document.querySelector('.form-container');
