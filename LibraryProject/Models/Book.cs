@@ -32,10 +32,6 @@ public class Book
     
     public string? ImageUrl { get; set; }
     
-    //Relations
-    //public ICollection<Review> Reviews { get; set; }
-    //public ICollection<UserBook> BookUsers { get; set; }
-    
     // These are computed properties - we don't store them in the database
     [NotMapped]
     public bool IsOnDiscount => 

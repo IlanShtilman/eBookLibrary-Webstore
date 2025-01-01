@@ -162,10 +162,21 @@
                                     {
                                         if (book.BorrowEndDate != null)
                                         {
-                                            var daysLeft = (book.BorrowEndDate - DateTime.Now).Days;
-                                            if (daysLeft > 0)
+                                            var timeRemaining = book.BorrowEndDate - DateTime.Now;
+                                            if (timeRemaining.TotalMinutes > 0)
                                             {
-                                                <span class="time-remaining">@daysLeft days remaining</span>
+                                                if (timeRemaining.TotalDays >= 1)
+                                                {
+                                                    <span class="time-remaining">@Math.Floor(timeRemaining.TotalDays) days remaining</span>
+                                                }
+                                                else if (timeRemaining.TotalHours >= 1)
+                                                {
+                                                    <span class="time-remaining">@Math.Floor(timeRemaining.TotalHours) hours remaining</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="time-remaining">@Math.Floor(timeRemaining.TotalMinutes) minutes remaining</span>
+                                                }
                                             }
                                             else
                                             {

@@ -535,6 +535,15 @@ public class BookController : Controller
         {
             return Unauthorized();
         }
+        
+        // Check if the book has already been borrowed and not returned
+        var alreadyBorrowed = await _context.Orders
+            .AnyAsync(o => o.BookId == bookId && o.Username == username && o.IsReturned == 0);
+
+        if (alreadyBorrowed)
+        {
+            return Json(new { success = false, message = "You have already borrowed this book and not returned it yet." });
+        }
 
         // Check if book already exists in cart with any action
         var existingInCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc =>
@@ -552,7 +561,7 @@ public class BookController : Controller
         // Count both current borrowed books and books in shopping cart marked for borrowing
         var borrowedCount = await _context.ShoppingCarts
             .CountAsync(sc => sc.Username == username && sc.Action == "Borrow");
-
+        
         if (borrowedCount < 3)
         {
             var ExistsShoppingCart = _context.ShoppingCarts.FirstOrDefault(sc =>

@@ -555,7 +555,9 @@ public class ShoppingCartController : Controller
 
                                  var endDateParam = new OracleParameter("BorrowEndDate", OracleDbType.Date)
                                  {
-                                     Value = currentDate.AddDays(30)
+                                     //Testing with Min to see if there any changes
+                                     Value = currentDate.AddMinutes(4)
+                                     // Value = currentDate.AddDays(30)
                                  };
                                  command.Parameters.Add(endDateParam);
 

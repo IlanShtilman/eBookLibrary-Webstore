@@ -1,10 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Adding delete button handlers');
     document.querySelectorAll('.delete-book').forEach(button => {
-        console.log('Found delete button with bookId:', button.getAttribute('data-bookid'));
         button.addEventListener('click', function() {
             const bookId = this.getAttribute('data-bookid');
-            console.log('Delete button clicked for bookId:', bookId);
             if (bookId) {
                 deleteBook(bookId);
             }
@@ -20,7 +17,7 @@ function deleteBook(bookId) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ "bookId": bookId }) // Make sure property name matches parameter name
+            body: JSON.stringify({ "bookId": bookId }) 
         })
             .then(response => response.json())
             .then(data => {

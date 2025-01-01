@@ -217,98 +217,114 @@ public class UserController : Controller
     [HttpGet]
     public async Task<IActionResult> Profile()
     {
-        string username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
-        {
-            return RedirectToAction("Login", "User");
-        }
-
-        // Get user details
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        // Get user's orders - simplified
-        var orders = await _context.Orders
-            .Where(o => o.Username == username)
-            .OrderByDescending(o => o.OrderDate)
-            .Take(5)
-            .Select(o => new
-            {
-                o.OrderId,
-                o.Action,
-                o.Price,
-                o.OrderDate
-            })
-            .ToListAsync();
-
-        // Get user's reviews
-        var reviews = await _context.Reviews
-            .Where(r => r.Username == username)
-            .OrderByDescending(r => r.CreatedAt)
-            .Take(5)
-            .Join(_context.Books,
-                review => review.BookId,
-                book => book.BookId,
-                (review, book) => new
-                {
-                    BookTitle = book.Title,
-                    review.Content,
-                    review.Rating,
-                    review.CreatedAt
-                })
-            .ToListAsync();
-
-        var totalOrders = await _context.Orders
-            .CountAsync(o => o.Username == username);
-
-        var waitingList = await _context.WaitingList
-            .Where(w => w.Username == username)
-            .Join(_context.Books,
-                w => w.BookId,
-                b => b.BookId,
-                (w, b) => new
-                {
-                    w.Position,
-                    w.JoinDate,
-                    BookTitle = b.Title,
-                    b.ImageUrl,
-                    b.BorrowPrice
-                })
-            .OrderBy(w => w.Position)
-            .ToListAsync();
-
-        var userBooks = await _context.Orders
-            .Where(o => o.Username == username && 
-                        (o.IsRemoved == null || o.IsRemoved == 0))
-            .Join(_context.Books,
-                order => order.BookId,
-                book => book.BookId,
-                (order, book) => new
-                {
-                    BookId = book.BookId,
-                    Title = book.Title,
-                    Author = book.Author,
-                    ImageUrl = book.ImageUrl,
-                    Action = order.Action,
-                    BorrowEndDate = order.BorrowEndDate,
-                    OrderDate = order.OrderDate,
-                    // Add these lines:
-                    IsPdfAvailable = book.IsPdfAvailable,
-                    IsEpubAvailable = book.IsEpubAvailable,
-                    IsMobiAvailable = book.IsMobiAvailable,
-                    IsF2bAvailable = book.IsF2bAvailable
-                })
-            .ToListAsync();
-        ViewBag.UserBooks = userBooks;
-        ViewBag.WaitingList = waitingList;
-        ViewBag.TotalOrders = totalOrders;
-        ViewBag.Orders = orders;
-        ViewBag.Reviews = reviews;
-        return View(user);
+    string username = HttpContext.Session.GetString("Username");
+    if (string.IsNullOrEmpty(username))
+    {
+        return RedirectToAction("Login", "User");
     }
+    // Get user details
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+    if (user == null)
+    {
+        return NotFound();
+    }
+    // Get user's orders - simplified
+    var orders = await _context.Orders
+        .Where(o => o.Username == username)
+        .OrderByDescending(o => o.OrderDate)
+        .Take(5)
+        .Select(o => new
+        {
+            o.OrderId,
+            o.Action,
+            o.Price,
+            o.OrderDate
+        })
+        .ToListAsync();
+    // Get user's reviews
+    var reviews = await _context.Reviews
+        .Where(r => r.Username == username)
+        .OrderByDescending(r => r.CreatedAt)
+        .Take(5)
+        .Join(_context.Books,
+            review => review.BookId,
+            book => book.BookId,
+            (review, book) => new
+            {
+                BookTitle = book.Title,
+                review.Content,
+                review.Rating,
+                review.CreatedAt
+            })
+        .ToListAsync();
+    var totalOrders = await _context.Orders
+        .CountAsync(o => o.Username == username);
+    var waitingList = await _context.WaitingList
+        .Where(w => w.Username == username)
+        .Join(_context.Books,
+            w => w.BookId,
+            b => b.BookId,
+            (w, b) => new
+            {
+                w.Position,
+                w.JoinDate,
+                BookTitle = b.Title,
+                b.ImageUrl,
+                b.BorrowPrice
+            })
+        .OrderBy(w => w.Position)
+        .ToListAsync();
+    // Handle expired orders
+    var currentTime = DateTime.Now;
+    var expiredOrders = await _context.Orders
+        .Where(o => o.BorrowEndDate <= currentTime && o.IsReturned == 0)
+        .ToListAsync();
+    foreach (var order in expiredOrders)
+    {
+        order.IsReturned = 1;
+        order.IsRemoved = 1; // Add this line to mark as removed
+        var book = await _context.Books.FindAsync(order.BookId);
+        if (book != null)
+        {
+            book.AvailableCopies += 1;
+        }
+    }
+    
+    if (expiredOrders.Any())
+    {
+        await _context.SaveChangesAsync();
+    }
+    // Get user's books - modified to include exact datetime comparison
+    var userBooks = await _context.Orders
+        .Where(o => o.Username == username &&
+                    (o.Action == "Buy" && (o.IsRemoved == null || o.IsRemoved == 0) || 
+                     (o.Action == "Borrow" && DateTime.Now <= o.BorrowEndDate))) // Changed < to <=
+        .Join(_context.Books,
+            order => order.BookId,
+            book => book.BookId,
+            (order, book) => new
+            {
+                BookId = book.BookId,
+                Title = book.Title,
+                Author = book.Author,
+                ImageUrl = book.ImageUrl,
+                Action = order.Action,
+                BorrowEndDate = order.BorrowEndDate,
+                OrderDate = order.OrderDate,
+                IsPdfAvailable = book.IsPdfAvailable,
+                IsEpubAvailable = book.IsEpubAvailable,
+                IsMobiAvailable = book.IsMobiAvailable,
+                IsF2bAvailable = book.IsF2bAvailable
+            })
+        .ToListAsync();
+    ViewBag.UserBooks = userBooks;
+    ViewBag.WaitingList = waitingList;
+    ViewBag.TotalOrders = totalOrders;
+    ViewBag.Orders = orders;
+    ViewBag.Reviews = reviews;
+    return View(user);
+}
+
 
     private string GenerateSecurePassword()
     {

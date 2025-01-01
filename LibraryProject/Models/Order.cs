@@ -15,6 +15,6 @@ public class Order
     public DateTime OrderDate { get; set; }
     public DateTime? BorrowStartDate { get; set; }
     public DateTime? BorrowEndDate { get; set; }
-    public bool? IsReturned { get; set; }
+    public int? IsReturned { get; set; }
     public int? IsRemoved { get; set; }
 }
