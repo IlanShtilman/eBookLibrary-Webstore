@@ -124,6 +124,7 @@
                 <option value="year_asc">Oldest First</option>
                 <option value="popular">Most Popular</option>
                 <option value="on_sale">On Sale Only</option>
+                <option value="borrowable">Available to Borrow</option>
             </select>
         </div>
         <div class="sf-filter">
@@ -141,7 +142,15 @@
                     <option value="">All Ages</option>
                     @foreach (AgeRestriction age in Enum.GetValues(typeof(AgeRestriction)))
                     {
-                        <option value="@age">@age</option>
+                        <option value="@age">@(age switch {
+                                AgeRestriction.All => "All Ages",
+                                AgeRestriction.ThreePlus => "3+",
+                                AgeRestriction.SevenPlus => "7+",
+                                AgeRestriction.TwelvePlus => "12+",
+                                AgeRestriction.SixteenPlus => "16+",
+                                AgeRestriction.EighteenPlus => "18+",
+                                _ => age.ToString()
+                            })</option>
                     }
                 </select>
             </div>
@@ -153,8 +162,6 @@
             <div class="filter-group">
                 <label>Publication Year:</label>
                 <input type="number" id="publishYear" placeholder="Year" class="sf-filter__input" />
-            </div>
-            <div class="filter-group">
             </div>
         </div>
         
@@ -189,12 +196,24 @@
         </div>
     </div>
     <div class="sf-product-card__content">
-        <div>Debug - IsAvailableToBorrow: @book.IsAvailableToBorrow, AvailableCopies: @book.AvailableCopies</div>
         <h5 class="sf-product-card__title">@book.Title</h5>
         <p class="sf-product-card__author">by @book.Author</p>
         <p class="sf-product-card__year">Published: @book.PublishYear</p>
-        <p class="sf-product-card__age">Age: @(book.AgeRestriction == AgeRestriction.All ? "0" :
-                                                     ((int)book.AgeRestriction * 3) + "+")</p>
+        <select id="ageRestrictionSelect" class="sf-filter__select">
+            <option value="">All Ages</option>  <!-- Remove this line -->
+            @foreach (AgeRestriction age in Enum.GetValues(typeof(AgeRestriction)))
+            {
+                <option value="@age">@(age switch {
+                        AgeRestriction.All => "All Ages",
+                        AgeRestriction.ThreePlus => "3+",
+                        AgeRestriction.SevenPlus => "7+",
+                        AgeRestriction.TwelvePlus => "12+",
+                        AgeRestriction.SixteenPlus => "16+",
+                        AgeRestriction.EighteenPlus => "18+",
+                        _ => age.ToString()
+                    })</option>
+            }
+        </select>
         <div class="sf-product-card__prices">
             @if (book.IsOnDiscount)
             {

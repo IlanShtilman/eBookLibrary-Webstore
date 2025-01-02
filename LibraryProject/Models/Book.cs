@@ -14,7 +14,6 @@ public class Book
     public int PublishYear { get; set; }
     public Genre Genre { get; set; }
     public AgeRestriction AgeRestriction { get; set; }
-    
     public bool IsAvailableToBuy { get; set; }
     public bool IsAvailableToBorrow { get; set; }
     public int TotalCopies { get; set; }
@@ -24,16 +23,12 @@ public class Book
     public double? DiscountedBuyPrice { get; set; }
     public DateTime? DiscountStartDate { get; set; } 
     public DateTime? DiscountEndDate { get; set; }
-    
     public bool IsEpubAvailable { get; set; }
     public bool IsF2bAvailable { get; set; }
     public bool IsMobiAvailable { get; set; }
     public bool IsPdfAvailable { get; set; }
-    
     public string? ImageUrl { get; set; }
-    
     public bool IsReserved { get; set; }
-    
     public string? ReservedForUsername { get; set; }
     public DateTime? ReservationExpiry { get; set; }
     

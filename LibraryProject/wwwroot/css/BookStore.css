@@ -895,3 +895,8 @@ nav .fas {
 .queue-btn:hover {
     background-color: #7f8c8d;
 }
+
+.sf-filter__checkbox {
+    margin-right: 8px;
+    cursor: pointer;
+}

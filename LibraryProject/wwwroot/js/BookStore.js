@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxPriceInput = document.getElementById('maxPrice');
     const publishYearInput = document.getElementById('publishYear');
 
+    setupActionButtonListeners();
+    
     // Filter state
     let currentFilters = {
         genre: 'all',
@@ -33,15 +35,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 maxPrice: currentFilters.maxPrice || '',
                 publishYear: currentFilters.publishYear || '',
                 ageRestriction: currentFilters.ageRestriction || '',
-                onlyDiscounted: currentFilters.onlyDiscounted
+                onlyDiscounted: currentFilters.onlyDiscounted,
+                onlyBorrowable: currentFilters.onlyBorrowable
             });
-            console.log('Query params:', queryParams.toString());
             const response = await fetch(`/Book/FilterBooks?${queryParams}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             const books = await response.json();
-            console.log('Received books:', books);
+            // console.log('Received books:', books);
             updateBookDisplay(books);
         } catch (error) {
             console.error('Error:', error);
@@ -56,6 +58,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateBookDisplay(books) {
+        const getAgeDisplay = (ageRestriction) => {
+            switch(ageRestriction) {
+                case 'All':
+                case 0: return 'All Ages';
+                case 'ThreePlus':
+                case 1: return '3+';
+                case 'SevenPlus':
+                case 2: return '7+';
+                case 'TwelvePlus':
+                case 3: return '12+';
+                case 'SixteenPlus':
+                case 4: return '16+';
+                case 'EighteenPlus':
+                case 5: return '18+';
+                default: return ageRestriction;
+            }
+        };
+
         const productsContainer = document.querySelector('.sf-products');
         const bookCount = document.querySelector('.book-count');
         const currentWishlistItems = Array.from(document.querySelectorAll('.sf-product-card__wishlist'))
@@ -116,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h5 class="sf-product-card__title">${book.title}</h5>
                     <p class="sf-product-card__author">by ${book.author}</p>
                     <p class="sf-product-card__year">Published: ${book.publishYear}</p>
-                    <p class="sf-product-card__age">Age: ${book.ageRestriction}</p>
+                    <p class="sf-product-card__age">Age: ${getAgeDisplay(book.ageRestriction)}</p>
                     <div class="sf-product-card__formats">
                         ${book.isEpubAvailable ? '<span class="format-badge">EPUB</span>' : ''}
                         ${book.isPdfAvailable ? '<span class="format-badge">PDF</span>' : ''}
@@ -170,10 +190,11 @@ document.addEventListener('DOMContentLoaded', function() {
             filterBooks();
         }
     });
-
+    
     sortSelect.addEventListener('change', () => {
         currentFilters.sortBy = sortSelect.value;
         currentFilters.onlyDiscounted = (sortSelect.value === 'on_sale');
+        currentFilters.onlyBorrowable = (sortSelect.value === 'borrowable'); // Add this line
         filterBooks();
     });
 
@@ -182,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filterBooks();
     });
 
+// For price range (around line 340)
     minPriceInput.addEventListener('change', () => {
         currentFilters.minPrice = minPriceInput.value;
         filterBooks();
@@ -192,11 +214,12 @@ document.addEventListener('DOMContentLoaded', function() {
         filterBooks();
     });
 
+// For publication year (around line 350)
     publishYearInput.addEventListener('change', () => {
         currentFilters.publishYear = publishYearInput.value;
         filterBooks();
     });
-
+    
     function handleAuthRequired(element) {
         if (confirm('Please log in to continue. Would you like to go to the login page?')) {
             window.location.href = '/User/Login';

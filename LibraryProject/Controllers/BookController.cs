@@ -387,11 +387,19 @@ public class BookController : Controller
         string author = "",
         int? publishYear = null,
         AgeRestriction? ageRestriction = null,
-        bool onlyDiscounted = false)
+        bool onlyDiscounted = false,
+        bool onlyBorrowable = false)
     {
+    
         var query = _context.Books.AsQueryable();
-
-        // Apply genre filter (if not "all")
+    
+        if (onlyBorrowable)
+        {
+            Console.WriteLine("Applying borrowable filter");
+            query = query.Where(b => b.IsAvailableToBorrow);
+            
+        }
+        
         if (!string.IsNullOrEmpty(genre) && genre.ToLower() != "all")
         {
             if (Enum.TryParse<Genre>(genre, true, out Genre genreEnum))
@@ -422,7 +430,6 @@ public class BookController : Controller
         // Apply price range filter
         if (minPrice.HasValue || maxPrice.HasValue)
         {
-            Console.WriteLine($"Price range: {minPrice} - {maxPrice}"); // Debug log
             if (minPrice.HasValue)
             {
                 query = query.Where(b =>
@@ -455,15 +462,24 @@ public class BookController : Controller
                 b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice.Value : b.BuyPrice),
             "price_desc" => query.OrderByDescending(b =>
                 b.DiscountedBuyPrice.HasValue ? b.DiscountedBuyPrice.Value : b.BuyPrice),
-            "on_sale" => query.Where(b =>
-                b.DiscountedBuyPrice.HasValue &&
-                b.DiscountStartDate <= DateTime.Now &&
-                b.DiscountEndDate >= DateTime.Now),
             "year_asc" => query.OrderBy(b => b.PublishYear),
             "year_desc" => query.OrderByDescending(b => b.PublishYear),
-            "popular" => query.OrderByDescending(b => b.TotalCopies - b.AvailableCopies),
-            _ => query.OrderBy(b => b.Title)
+            "popular" => query.OrderByDescending(b => 
+                _context.Orders.Count(o => 
+                    o.BookId == b.BookId && 
+                    o.IsRemoved == 0)),
+            "on_sale" => query.OrderByDescending(b => b.DiscountedBuyPrice), // Changed to sort instead of filter
+            _ => query.OrderBy(b => b.Title)  // Default case
         };
+
+// Move the on_sale filter to where it belongs - with other filters
+        if (sortBy?.ToLower() == "on_sale")
+        {
+            query = query.Where(b =>
+                b.DiscountedBuyPrice.HasValue &&
+                b.DiscountStartDate <= DateTime.Now &&
+                b.DiscountEndDate >= DateTime.Now);
+        }
 
         // Select all required properties
         var books = await query.Select(b => new
@@ -493,9 +509,6 @@ public class BookController : Controller
                            b.DiscountStartDate <= DateTime.Now &&
                            b.DiscountEndDate >= DateTime.Now
         }).ToListAsync();
-
-        Console.WriteLine($"Found {books.Count} books"); // Debug log
-
         return Json(books);
     }
 
