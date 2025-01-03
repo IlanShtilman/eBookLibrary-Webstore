@@ -3,7 +3,8 @@ namespace LibraryProject.Data.Enums;
 public enum Genre
 {
     Fiction,
-    NonFiction,
+    Sports,
+    Art,
     Mystery,
     Fantasy,
     ScienceFiction,
@@ -21,5 +22,6 @@ public enum Genre
     Classic,
     Science,
     Philosophy,
-    Travel
+    Travel,
+    Cooking
 }
