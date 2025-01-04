@@ -3,16 +3,18 @@
 @model IEnumerable<LibraryProject.Models.Book>
 @{
     ViewData["Title"] = "Store";
-    // Add these debug lines
     var bookCount = Model?.Count() ?? 0;
     var firstBook = Model?.FirstOrDefault();
 }
+
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="~/css/BookStore.css" asp-append-version="true"/>
+
 @{
     var username = ViewBag.Username;
 }
+
 @* Section of Header website *@
 <div id="header">
     <div class="container">
@@ -64,7 +66,7 @@
     <div class="hero-decoration"></div>
 </div>
 
-@* Summery of books *@
+@* Summary of books *@
 <div id="card-area">
     <div class="wrapper">
         <div class="box-area">
@@ -87,6 +89,7 @@
                     <a href="#" class="book-now">Explore</a>
                 </div>
             </div>
+
             <!-- Gambit Card -->
             <div class="box">
                 <img src="~/images/Gambit.jpeg" alt="Gambit Series">
@@ -96,7 +99,6 @@
                     <a href="#" class="book-now">Explore</a>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -164,124 +166,105 @@
                 <input type="number" id="publishYear" placeholder="Year" class="sf-filter__input" />
             </div>
         </div>
-        
-    @* Showing books and deatils *@
-    </div><div class="sf-products">
+    </div>
+
+    @* Showing books and details *@
+    <div class="sf-products">
         @foreach (var book in Model)
         {
             <div class="sf-product-card @book.Genre" data-year="@book.PublishYear" data-age="@book.AgeRestriction">
-            <div class="sf-product-card__image-wrapper">
-                <img class="sf-product-card__image"
-                     src="@(string.IsNullOrEmpty(book.ImageUrl)
-                              ? "/images/book-placeholder.jpg"
-                              : (book.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                                  ? book.ImageUrl
-                                  : $"/images/Bookcovers/{book.ImageUrl}"))"
-                     alt="@book.Title" />
-                @if (book.IsAvailableToBorrow && book.AvailableCopies == 0)
-                {
-                    <div class="sf-product-card__queue"
-                         data-book-id="@book.BookId"
-                         onclick="console.log('Book ID:', @book.BookId)"
-                         title="Join Waiting List For Borrow">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                }
-            <div class="sf-product-card__wishlist" data-book-id="@book.BookId">
-            <i class="fa-heart @(ViewBag.Wishlist?.Contains(book.BookId) == true ? "fas active" : "far")"></i>
-            
-        </div>
-        <div class="sf-product-card__quantity">
-            @book.AvailableCopies borrow copies left
-        </div>
-    </div>
-    <div class="sf-product-card__content">
-        <h5 class="sf-product-card__title">@book.Title</h5>
-        <p class="sf-product-card__author">by @book.Author</p>
-        <p class="sf-product-card__year">Published: @book.PublishYear</p>
-        <select id="ageRestrictionSelect" class="sf-filter__select">
-            <option value="">All Ages</option>  <!-- Remove this line -->
-            @foreach (AgeRestriction age in Enum.GetValues(typeof(AgeRestriction)))
-            {
-                <option value="@age">@(age switch {
-                        AgeRestriction.All => "All Ages",
-                        AgeRestriction.ThreePlus => "3+",
-                        AgeRestriction.SevenPlus => "7+",
-                        AgeRestriction.TwelvePlus => "12+",
-                        AgeRestriction.SixteenPlus => "16+",
-                        AgeRestriction.EighteenPlus => "18+",
-                        _ => age.ToString()
-                    })</option>
-            }
-        </select>
-        <div class="sf-product-card__prices">
-            @if (book.IsOnDiscount)
-            {
-                <p class="price">
-                    Buy: <span class="original-price text-decoration-line-through">$@book.BuyPrice.ToString("F2")</span>
-                    <span class="discounted-price">$@book.DiscountedBuyPrice?.ToString("F2")</span>
-                    <small class="discount-timer">Sale ends: @book.DiscountEndDate?.ToString("MM/dd/yyyy")</small>
-                </p>
-            }
-            else
-            {
-                <p class="price">Buy: $@book.BuyPrice.ToString("F2")</p>
-            }
-            <p class="price">Borrow: $@book.BorrowPrice.ToString("F2")</p>
-        </div>
-        <div class="sf-product-card__actions">
-            @if (book.IsAvailableToBuy)
-            {
-                <button class="buy-btn"
-                        data-book-id="@book.BookId"
-                        >
-                    Buy
-                </button>
-            }
-            @{
-                var currentUsername = ViewBag.Username;
-                var reservedUsername = book.ReservedForUsername;
-            }
-            <div style="display:none">
-                Debug: Current User: @currentUsername
-                Reserved For: @reservedUsername
-                Match: @(book.ReservedForUsername == ViewBag.Username)
-            </div>
-            @if (book.IsAvailableToBorrow)
-            {
-                @if (book.IsReserved)
-                {
-                    @if (book.ReservedForUsername == ViewBag.Username)
+                <div class="sf-product-card__image-wrapper" style="cursor: pointer;" onclick="window.location.href='/Book/ViewBook/@book.BookId'">
+                    <img class="sf-product-card__image"
+                         src="@(string.IsNullOrEmpty(book.ImageUrl)
+                                  ? "/images/book-placeholder.jpg"
+                                  : (book.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                      ? book.ImageUrl
+                                      : $"/images/Bookcovers/{book.ImageUrl}"))"
+                         alt="@book.Title" />
+                    @if (book.IsAvailableToBorrow && book.AvailableCopies == 0)
                     {
-                        <button class="borrow-btn" data-book-id="@book.BookId">
-                            Borrow (Reserved for you - @Math.Floor((book.ReservationExpiry.Value - DateTime.Now).TotalMinutes) minutes left)
-                        </button>
+                        <div class="sf-product-card__queue"
+                             data-book-id="@book.BookId"
+                             onclick="event.stopPropagation(); console.log('Book ID:', @book.BookId)"
+                             title="Join Waiting List For Borrow">
+                            <i class="fas fa-clock"></i>
+                        </div>
                     }
-                }
-                else if (book.AvailableCopies > 0)
-                {
-                    <button class="borrow-btn" data-book-id="@book.BookId">Borrow</button>
-                }
-                else
-                {
-                    <button class="queue-btn" data-book-id="@book.BookId">Join Queue</button>
-                }
-            }
-        </div>
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="error-message">
-                @TempData["ErrorMessage"]
+                    <div class="sf-product-card__wishlist"
+                         data-book-id="@book.BookId"
+                         onclick="event.stopPropagation();">
+                        <i class="fa-heart @(ViewBag.Wishlist?.Contains(book.BookId) == true ? "fas active" : "far")"></i>
+                    </div>
+                    <div class="sf-product-card__quantity">
+                        @book.AvailableCopies borrow copies left
+                    </div>
+                </div>
+
+                <div class="sf-product-card__content">
+                    <h5 class="sf-product-card__title">@book.Title</h5>
+                    <p class="sf-product-card__author">by @book.Author</p>
+                    <p class="sf-product-card__year">Published: @book.PublishYear</p>
+                    <div class="sf-product-card__prices">
+                        @if (book.IsOnDiscount)
+                        {
+                            <p class="price">
+                                Buy: <span class="original-price text-decoration-line-through">$@book.BuyPrice.ToString("F2")</span>
+                                <span class="discounted-price">$@book.DiscountedBuyPrice?.ToString("F2")</span>
+                                <small class="discount-timer">Sale ends: @book.DiscountEndDate?.ToString("MM/dd/yyyy")</small>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="price">Buy: $@book.BuyPrice.ToString("F2")</p>
+                        }
+                        <p class="price">Borrow: $@book.BorrowPrice.ToString("F2")</p>
+                    </div>
+                    <div class="sf-product-card__actions">
+                        @if (book.IsAvailableToBuy)
+                        {
+                            <button class="buy-btn" data-book-id="@book.BookId">
+                                Buy
+                            </button>
+                        }
+                        @{
+                            var currentUsername = ViewBag.Username;
+                            var reservedUsername = book.ReservedForUsername;
+                        }
+                        @if (book.IsAvailableToBorrow)
+                        {
+                            @if (book.IsReserved)
+                            {
+                                @if (book.ReservedForUsername == ViewBag.Username)
+                                {
+                                    <button class="borrow-btn" data-book-id="@book.BookId">
+                                        Borrow (Reserved for you - @Math.Floor((book.ReservationExpiry.Value - DateTime.Now).TotalMinutes) minutes left)
+                                    </button>
+                                }
+                            }
+                            else if (book.AvailableCopies > 0)
+                            {
+                                <button class="borrow-btn" data-book-id="@book.BookId">Borrow</button>
+                            }
+                            else
+                            {
+                                <button class="queue-btn" data-book-id="@book.BookId">Join Queue</button>
+                            }
+                        }
+                    </div>
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="error-message">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="success-message">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                </div>
             </div>
-        }
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="success-message">
-                @TempData["SuccessMessage"]
-            </div>
-        }
-    </div>
-</div>
         }
     </div>
 </div>
@@ -318,7 +301,7 @@
     </div>
 </div>
 
-@* Keep existing footer *@
+@* Footer *@
 <div class="CR">
     <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
 </div>

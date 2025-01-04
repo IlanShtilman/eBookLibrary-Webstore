@@ -23,5 +23,6 @@ public enum Genre
     Science,
     Philosophy,
     Travel,
-    Cooking
+    Cooking,
+    HistoricalFiction
 }

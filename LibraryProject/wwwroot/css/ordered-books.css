@@ -98,3 +98,54 @@
         padding: 20px;
     }
 }
+
+/*change for view book*/
+.book-content-wrapper {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.book-cover {
+    flex: 0 0 300px;
+    position: relative;
+}
+
+.cover-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.availability-badge {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+    color: #333;
+    white-space: nowrap;
+}
+
+.book-details {
+    flex: 1;
+}
+
+@media only screen and (max-width: 768px) {
+    .book-content-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .book-cover {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 30px;
+    }
+}

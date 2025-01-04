@@ -1,3 +1,4 @@
+
 // Main initialization - this should be at the root level
 document.addEventListener('DOMContentLoaded', function() {
     // Element selections
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const publishYearInput = document.getElementById('publishYear');
 
     setupActionButtonListeners();
-    
+
     // Filter state
     let currentFilters = {
         genre: 'all',
@@ -109,23 +110,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 : `<p class="price">Buy: $${book.buyPrice.toFixed(2)}</p>`;
 
             const bookCard = `
-                <div class="sf-product-card ${book.genre}" data-year="${book.publishYear}" data-age="${book.ageRestriction}">
-                    <div class="sf-product-card__image-wrapper">
-                        <img class="sf-product-card__image" 
-                             src="${book.imageUrl
-                            ? (book.imageUrl.startsWith('http')
-                                ? book.imageUrl
-                                : `/images/BookCovers/${book.imageUrl}`)
-                            : '/images/book-placeholder.jpg'}"
-                             alt="${book.title}"
-                             onerror="this.onerror=null; this.src='/images/book-placeholder.jpg';"
-                        />
+            <div class="sf-product-card ${book.genre}" data-year="${book.publishYear}" data-age="${book.ageRestriction}">
+                <div class="sf-product-card__image-wrapper" style="cursor: pointer;" 
+                     onclick="window.location.href='/Book/ViewBook/${book.bookId}'">
+                    <img class="sf-product-card__image" 
+                         src="${book.imageUrl
+                ? (book.imageUrl.startsWith('http')
+                    ? book.imageUrl
+                    : `/images/BookCovers/${book.imageUrl}`)
+                : '/images/book-placeholder.jpg'}"
+                         alt="${book.title}"
+                         onerror="this.onerror=null; this.src='/images/book-placeholder.jpg';"
+                    />
                     ${book.isAvailableToBorrow && book.availableCopies === 0 ?
-                `<div class="sf-product-card__queue" data-book-id="${book.bookId}" title="Join Waiting List For Borrow">
-        <i class="fas fa-clock"></i>
-    </div>` : ''
+                `<div class="sf-product-card__queue" 
+                              data-book-id="${book.bookId}" 
+                              onclick="event.stopPropagation();"
+                              title="Join Waiting List For Borrow">
+                            <i class="fas fa-clock"></i>
+                         </div>` : ''
             }
-                    <div class="sf-product-card__wishlist" data-book-id="${book.bookId}">
+                    <div class="sf-product-card__wishlist" 
+                         data-book-id="${book.bookId}"
+                         onclick="event.stopPropagation();">
                         <i class="fa-heart ${heartClass}"></i>
                     </div>
                     <div class="sf-product-card__quantity">
@@ -190,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filterBooks();
         }
     });
-    
+
     sortSelect.addEventListener('change', () => {
         currentFilters.sortBy = sortSelect.value;
         currentFilters.onlyDiscounted = (sortSelect.value === 'on_sale');
@@ -219,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentFilters.publishYear = publishYearInput.value;
         filterBooks();
     });
-    
+
     function handleAuthRequired(element) {
         if (confirm('Please log in to continue. Would you like to go to the login page?')) {
             window.location.href = '/User/Login';
@@ -404,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
+
         // Wishlist handlers
         document.querySelectorAll('.sf-product-card__wishlist').forEach(wishlistElement => {
             wishlistElement.addEventListener('click', async function(event) {
