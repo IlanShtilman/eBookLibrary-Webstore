@@ -384,6 +384,20 @@ public class ShoppingCartController : Controller
     {
         try 
         {
+            string username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
+            {
+                return new JsonResult(new { error = "User not logged in" }) { StatusCode = 401 };
+            }
+
+            var hasItems = await _context.ShoppingCarts
+                .AnyAsync(s => s.Username == username);
+
+            if (!hasItems)
+            {
+                return new JsonResult(new { error = "Shopping cart is empty" }) { StatusCode = 400 };
+            }
+            
             var totalAmount = data?["amount"]?.ToString();
             
             // Validate amount format
@@ -642,3 +656,9 @@ public class ShoppingCartController : Controller
     }
     
 }
+
+
+
+
+
+

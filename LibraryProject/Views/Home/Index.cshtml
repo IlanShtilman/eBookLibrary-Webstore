@@ -16,6 +16,7 @@
                 @if (ViewBag.Role == 1)
                 {
                     <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
+                    <li><a asp-controller="User" asp-action="ManageUsers" id="addBookNavBtn">User Management</a></li>
                 }
                 @if (ViewBag.isLogged == 1)
                 {

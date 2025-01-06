@@ -1,3 +1,4 @@
+
 @model IEnumerable<dynamic>
 @{
     var username = Context.Session.GetString("Username");
@@ -38,7 +39,7 @@
                             <i class="fa-solid fa-heart"></i>
                         </a>
                         <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
-                        <i class="fa-solid fa-cart-shopping"></i>
+                            <i class="fa-solid fa-cart-shopping"></i>
                         </a>
                         <a asp-controller="User" asp-action="Logout" class="icon-link">
                             <i class="fa-solid fa-right-from-bracket"></i>
@@ -143,7 +144,6 @@
                     </div>
 
                     <form>
-                        
                         <div class="summary">
                             <div class="summary-item">
                                 <span>Subtotal</span>
@@ -158,8 +158,17 @@
                                 <span>$@(Model.Sum(x => (decimal)x.Price) + 10)</span>
                             </div>
                         </div>
-                        <div id="paypal-button-container"></div>
-                        <input type="hidden" id="totalAmount" value="@((Model.Sum(x => (decimal)x.Price) + 10).ToString("0.00"))"/>
+                        @if (Model.Any())
+                        {
+                            <div id="paypal-button-container"></div>
+                            <input type="hidden" id="totalAmount" value="@((Model.Sum(x => (decimal)x.Price) + 10).ToString("0.00"))"/>
+                        }
+                        else
+                        {
+                            <div class="empty-cart-message">
+                                Your cart is empty. Please add items to proceed with checkout.
+                            </div>
+                        }
                     </form>
                 </div>
             </div>
@@ -169,72 +178,98 @@
 @section Scripts {
     <script src="https://www.paypal.com/sdk/js?client-id=@(ViewBag.PaypalClientId)&currency=USD"></script>
     <script>
-        paypal.Buttons({
-            async createOrder() {
-                const response = await fetch("@Url.ActionLink("CreateOrder", "ShoppingCart")", {
-                   method: "POST",
-                   headers: {
-                       "Content-Type": "application/json",
-                   },
-                    body: JSON.stringify({
-                        amount: document.getElementById("totalAmount").value
-                    })
-                });
-                const order = await response.json();
-                return order.id;
-            },
-            async onApprove(data) {
-                // Capture the funds from the transaction.
-                const response = await fetch("@Url.ActionLink("CompleteOrder", "ShoppingCart")", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        orderID: data.orderID
-                    })
-                })
+        function isCartEmpty() {
+            return document.querySelectorAll('.book-item').length === 0;
+        }
 
-                const details = await response.json();
+        // Only initialize PayPal buttons if cart is not empty
+        if (!isCartEmpty()) {
+            paypal.Buttons({
+                async createOrder() {
+                    // Double-check cart is not empty before creating order
+                    if (isCartEmpty()) {
+                        document.getElementById("notification-container").innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Cannot checkout with empty cart!</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        return;
+                    }
 
-                if (details.status === "success") {
+                    const response = await fetch("@Url.ActionLink("CreateOrder", "ShoppingCart")", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            amount: document.getElementById("totalAmount").value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to create order');
+                    }
+
+                    const order = await response.json();
+                    return order.id;
+                },
+                async onApprove(data) {
+                    // Capture the funds from the transaction.
+                    const response = await fetch("@Url.ActionLink("CompleteOrder", "ShoppingCart")", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            orderID: data.orderID
+                        })
+                    })
+
+                    const details = await response.json();
+
+                    if (details.status === "success") {
+                        document.getElementById("notification-container").innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>The order is created successfully!</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        `;
+
+                        setTimeout(() => {
+                            window.location.href = details.redirectUrl;
+                        }, 3000);
+                    }
+                    else {
+                        document.getElementById("notification-container").innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Failed to create the order!</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        `;
+                    }
+                },
+                onCancel(data) {
                     document.getElementById("notification-container").innerHTML = `
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <strong>The order is created successfully!</strong>
+                    <div class='alert alert-danger alert-dismissible fade show' role='alert'>
+                        <strong>Payment Canceled!</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     `;
-                    
-                    setTimeout(() => {
-                        window.location.href = details.redirectUrl;
-                    }, 3000);
-                }
-                else {
+                },
+                onError(err) {
                     document.getElementById("notification-container").innerHTML = `
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Failed to create the order!</strong>
+                    <div class='alert alert-danger alert-dismissible fade show' role='alert'>
+                        <strong>An error occured! Please retry later.</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     `;
                 }
-            },
-            onCancel(data) {
-              document.getElementById("notification-container").innerHTML = `
-                <div class='alert alert-danger alert-dismissible fade show' role='alert'>
-                    <strong>Payment Canceled!</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                `;
-            },
-            onError(err) {
-                document.getElementById("notification-container").innerHTML = `
-                <div class='alert alert-danger alert-dismissible fade show' role='alert'>
-                    <strong>An error occured! Please retry later.</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                `;
-            }
-        }).render('#paypal-button-container');
+            }).render('#paypal-button-container');
+        }
     </script>
     <script src="~/js/ShoppingCart.js" asp-append-version="true"></script>
 }
+
+

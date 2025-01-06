@@ -398,4 +398,52 @@ public class UserController : Controller
     
         return File(bytes, "text/plain", fileName);
     }
+    
+    
+    [HttpGet]
+    public async Task<IActionResult> ManageUsers()
+    {
+        string username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username))
+        {
+            return RedirectToAction("Login", "User");
+        }
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user.Role != UserRole.Admin)
+        {
+            TempData["Message"] = "Access Denied! You do not have the required permissions.";
+            return RedirectToAction("Index", "Home");
+        }
+        var users = await _context.Users.ToListAsync();
+        return View(users);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> ChangeRole(string username, UserRole newRole)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            user.Role = newRole;
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "User role updated successfully.";
+        }
+        return RedirectToAction("ManageUsers");
+    }
+    [HttpPost]
+    public async Task<IActionResult> RemoveUser(string username)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "User removed successfully.";
+        }
+        return RedirectToAction("ManageUsers");
+    }
+    
+    
+    
+    
 }
