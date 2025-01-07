@@ -49,30 +49,27 @@ async function removeFromWishlist(bookId) {
 
 async function addToCart(bookId, action) {
     try {
-        const response = await fetch('/ShoppingCart/AddToCart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                bookId: bookId,
-                quantity: 1,
-                action: action
-            })
-        });
+        // Only check queue status for borrow actions
+        if (action.toLowerCase() === 'borrow') {
+            const bookStatusResponse = await fetch(`/Book/CheckBookStatus/${bookId}`);
+            const bookStatus = await bookStatusResponse.json();
 
-        if (response.ok) {
-            await removeFromWishlist(bookId);
-            window.location.href = '/ShoppingCart';
+            if (bookStatus.needsQueue) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'This book currently has a waiting list. Please join the queue from the store page.';
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.left = '50%';
+                messageDiv.style.transform = 'translateX(-50%)';
+                messageDiv.style.zIndex = '9999';
+                document.body.appendChild(messageDiv);
+                setTimeout(() => messageDiv.remove(), 3000);
+                return;
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
 
-async function addToCart(bookId, action) {
-    try {
-        const response = await fetch('/ShoppingCart/AddToCart', {  // Updated URL
+        const response = await fetch('/ShoppingCart/AddToCart', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -92,7 +89,6 @@ async function addToCart(bookId, action) {
         const result = await response.json();
 
         if (result.success) {
-            // Create success message
             const messageDiv = document.createElement('div');
             messageDiv.className = 'success-message';
             messageDiv.textContent = result.message;
@@ -108,10 +104,7 @@ async function addToCart(bookId, action) {
                 messageDiv.remove();
             }, 3000);
 
-            // Remove from wishlist after successful cart addition
             await removeFromWishlist(bookId);
-
-            // Redirect to shopping cart
             window.location.href = '/ShoppingCart';
         } else {
             const messageDiv = document.createElement('div');

@@ -671,6 +671,26 @@ public class BookController : Controller
     await _context.SaveChangesAsync();
     return Json(new { success = true, message = "Book successfully added to cart!" });
 }
+    [HttpGet]
+    public async Task<IActionResult> CheckBookStatus(int bookId)
+    {
+        var book = await _context.Books.FindAsync(bookId);
+        if (book == null)
+        {
+            return NotFound();
+        }
+
+        bool needsQueue = book.IsAvailableToBorrow && book.AvailableCopies == 0;
+
+        // Check if there's already a waiting list
+        var hasWaitingList = await _context.WaitingList
+            .AnyAsync(w => w.BookId == bookId);
+
+        return Json(new { 
+            needsQueue = needsQueue || hasWaitingList,
+            availableCopies = book.AvailableCopies
+        });
+    }
 
     [HttpPost]
     public async Task<IActionResult> AddToWaitingList([FromBody] int bookId)

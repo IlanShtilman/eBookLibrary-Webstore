@@ -165,8 +165,8 @@ public class ShoppingCartController : Controller
     }
 
     [HttpPost]
-public async Task<IActionResult> UpdateAction(int bookId, string newAction)
-{
+   public async Task<IActionResult> UpdateAction(int bookId, string newAction)
+   {
     try
     {
         string username = HttpContext.Session.GetString("Username");
@@ -594,7 +594,7 @@ public async Task<IActionResult> UpdateAction(int bookId, string newAction)
                                  var endDateParam = new OracleParameter("BorrowEndDate", OracleDbType.Date)
                                  {
                                      //Testing with Min to see if there any changes
-                                     Value = currentDate.AddMinutes(5)
+                                     Value = currentDate.AddMinutes(3)
                                      // Value = currentDate.AddDays(30)
                                  };
                                  command.Parameters.Add(endDateParam);
@@ -628,6 +628,7 @@ public async Task<IActionResult> UpdateAction(int bookId, string newAction)
                             } 
                             }
                         }
+                        await UpdateWaitingList(username, cartItems);
                         _context.ShoppingCarts.RemoveRange(cartItems);
                         await _context.SaveChangesAsync();
                         
@@ -677,6 +678,38 @@ public async Task<IActionResult> UpdateAction(int bookId, string newAction)
         }
 
         return new JsonResult("error");
+    }
+    // In your ShoppingCartController, modify the CompleteOrder method
+// Add this after successfully creating the order:
+
+    private async Task UpdateWaitingList(string username, List<ShoppingCart> cartItems)
+    {
+        foreach (var item in cartItems)
+        {
+            // Find and remove any waiting list entries for books that were ordered
+            var waitingListEntry = await _context.WaitingList
+                .FirstOrDefaultAsync(w => w.Username == username && w.BookId == item.BookId);
+
+            if (waitingListEntry != null)
+            {
+                // Get the current position before removing
+                int removedPosition = waitingListEntry.Position;
+            
+                // Remove the entry
+                _context.WaitingList.Remove(waitingListEntry);
+            
+                // Update positions for remaining users
+                var remainingEntries = await _context.WaitingList
+                    .Where(w => w.BookId == item.BookId && w.Position > removedPosition)
+                    .ToListAsync();
+
+                foreach (var entry in remainingEntries)
+                {
+                    entry.Position--; // Decrease position by 1
+                }
+            }
+        }
+        await _context.SaveChangesAsync();
     }
     
 }

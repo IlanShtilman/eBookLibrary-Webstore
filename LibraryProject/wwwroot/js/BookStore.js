@@ -10,13 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const minPriceInput = document.getElementById('minPrice');
     const maxPriceInput = document.getElementById('maxPrice');
     const publishYearInput = document.getElementById('publishYear');
-
-    setupActionButtonListeners();
+    
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('searchQuery');
+    
 
     // Filter state
     let currentFilters = {
         genre: 'all',
-        searchQuery: '',
+        searchQuery: searchQuery || '',
         sortBy: '',
         minPrice: null,
         maxPrice: null,
@@ -24,6 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
         ageRestriction: null,
         onlyDiscounted: false
     };
+
+    if (searchQuery && searchInput) {
+        searchInput.value = searchQuery;
+        filterBooks(); // Trigger initial search
+    }
+
+    setupActionButtonListeners();
+    
+    
 
     // Core filtering function
     async function filterBooks() {

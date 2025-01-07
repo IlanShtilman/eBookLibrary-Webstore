@@ -69,9 +69,10 @@
         }
         <p>Welcome to ilan's and ariel's eBook Store! our community's center for lifelong curiosity, learning and reading</p>
         <div class="search-container">
-            <input type="text" class="search-bar" placeholder="What would you like to explore today?" aria-label="Search books" />
-            <button class="search-button" aria-label="Search">SEARCH</button>
+            <input type="text" id="homeSearchInput" class="search-bar" placeholder="What would you like to explore today?" aria-label="Search books" />
+            <button id="homeSearchButton" class="search-button" aria-label="Search">SEARCH</button>
         </div>
+
     </div>
 </div>
 <div id="How-It-Works">
@@ -347,4 +348,41 @@
         <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('homeSearchInput');
+        const searchButton = document.getElementById('homeSearchButton');
 
+        if (!searchInput || !searchButton) {
+            console.error('Search elements not found!');
+            return;
+        }
+
+        function performSearch() {
+            console.log('Search triggered');  // Debug log
+            const searchQuery = searchInput.value.trim();
+            console.log('Search query:', searchQuery);  // Debug log
+
+            if (searchQuery) {
+                const url = `/Book/Store?searchQuery=${encodeURIComponent(searchQuery)}`;
+                console.log('Redirecting to:', url);  // Debug log
+                window.location.href = url;
+            }
+        }
+
+        // Debug log for setup
+        console.log('Setting up search listeners');
+
+        searchButton.addEventListener('click', () => {
+            console.log('Button clicked');  // Debug log
+            performSearch();
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                console.log('Enter pressed');  // Debug log
+                performSearch();
+            }
+        });
+    });
+</script>
