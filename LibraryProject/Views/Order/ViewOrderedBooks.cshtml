@@ -14,14 +14,12 @@
                 @foreach (var order in Model)
                 {
                     <div class="book-item">
-                        <h3>Order from @order.OrderDate.ToString("dd.MM.yyyy")</h3>
+                        <h3>Order #@order.OrderId from @order.OrderDate.ToString("dd.MM.yyyy")</h3>
+                        <p><strong>Number of Books:</strong> @order.Books</p>
                         <p><strong>Total Price:</strong> $@order.TotalPrice.ToString("F2")</p>
-                        @foreach (var orderId in order.OrderIds)
-                        {
-                            <a asp-controller="Order" asp-action="OrderDetails" asp-route-orderId="@orderId" class="review-link">
-                                View Order Details
-                            </a>
-                        }
+                        <a asp-controller="Order" asp-action="OrderDetails" asp-route-orderId="@order.OrderId" class="review-link">
+                            View Order Details
+                        </a>
                     </div>
                 }
             </div>
