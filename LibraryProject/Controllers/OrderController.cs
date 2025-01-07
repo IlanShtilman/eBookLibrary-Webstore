@@ -28,6 +28,8 @@ public class OrderController : Controller
         {
             return RedirectToAction("Login", "User");
         }
+        
+        ViewBag.Username = username;
 
         var orders = await _context.Orders
             .Where(o => o.Username == username)

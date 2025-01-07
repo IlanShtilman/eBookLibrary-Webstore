@@ -58,7 +58,34 @@
         <h1 class="fade-in">Read anywhere, from everywhere.</h1>
     </div>
 </div>
-
+<!-- Notifications -->
+@if (ViewBag.BooksNearingExpiration != null && ((IEnumerable<dynamic>)ViewBag.BooksNearingExpiration).Any())
+{
+    <div id="expiration-alert" class="notification-alert" style="background-color: #FEF3C7; border: 1px solid #F59E0B; padding: 1rem; margin: 1rem auto; border-radius: 0.375rem; max-width: 90%;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-exclamation-triangle" style="color: #D97706;"></i>
+            <strong style="color: #92400E;">Warning: Books Expiring Soon</strong>
+        </div>
+        <div style="margin-top: 0.5rem; color: #92400E;">
+            @if (((IEnumerable<dynamic>)ViewBag.BooksNearingExpiration).Count() == 1)
+            {
+                var book = ((IEnumerable<dynamic>)ViewBag.BooksNearingExpiration).First();
+                <p>The book "@book.Title" will expire soon. Please make sure to finish reading it before the borrow period ends.</p>
+            }
+            else
+            {
+                <p>The following books will expire soon:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; list-style-type: disc;">
+                    @foreach (var book in (IEnumerable<dynamic>)ViewBag.BooksNearingExpiration)
+                    {
+                        <li>"@book.Title"</li>
+                    }
+                </ul>
+                <p style="margin-top: 0.5rem;">Please make sure to finish reading these books before their borrow periods end.</p>
+            }
+        </div>
+    </div>
+}
 <div class="main-content">
     <div class="profile-container">
         <!-- Personal Information -->
@@ -245,12 +272,14 @@
                     {
                         <div class="review-card">
                             <div class="review-header">
-                                <h4>@review.BookTitle</h4>
-                                <div class="rating">
-                                    @for (int i = 0; i < review.Rating; i++)
-                                    {
-                                        <i class="fas fa-star"></i>
-                                    }
+                                <div class="review-title">
+                                    <h4>@review.BookTitle</h4>
+                                    <div class="rating">
+                                        @for (int i = 0; i < review.Rating; i++)
+                                        {
+                                            <i class="fas fa-star"></i>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                             <p class="review-content">@review.Content</p>

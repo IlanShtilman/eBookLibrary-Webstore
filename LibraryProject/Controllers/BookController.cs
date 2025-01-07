@@ -153,7 +153,7 @@ public class BookController : Controller
         {
             await connection.OpenAsync();
             // Fixed the SQL command by adding "SELECT"
-            using (var command = new OracleCommand("SELECT PERSTIN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
+            using (var command = new OracleCommand("SELECT SHTILMAN.BOOKS_SEQ.NEXTVAL FROM DUAL", connection))
             {
                 nextBookId = Convert.ToInt32(await command.ExecuteScalarAsync());
             }
@@ -573,6 +573,25 @@ public class BookController : Controller
     if (string.IsNullOrEmpty(username))
     {
         return Unauthorized();
+    }
+    
+    // Check both cart and active orders
+    var cartBorrowCount = await _context.ShoppingCarts
+        .CountAsync(sc => sc.Username == username && 
+                          sc.Action.ToLower() == "borrow");
+
+    var activeBorrowCount = await _context.Orders
+        .CountAsync(o => o.Username == username && 
+                         o.Action.ToLower() == "borrow" && 
+                         (o.IsReturned == 0 || o.IsReturned == null) && 
+                         (o.IsRemoved == 0 || o.IsRemoved == null));
+
+    if ((cartBorrowCount + activeBorrowCount) >= 3)
+    {
+        return Json(new { 
+            success = false, 
+            message = "You can only borrow up to 3 books at a time."
+        });
     }
 
     var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);

@@ -317,6 +317,27 @@ public class UserController : Controller
                 IsF2bAvailable = book.IsF2bAvailable
             })
         .ToListAsync();
+    var currentDate = DateTime.Now;
+    var fiveDaysFromNow = DateTime.Now.AddDays(5);
+
+    // Get books that will expire within 5 days
+    var booksNearingExpiration = await _context.Orders
+        .Where(o => o.Username == username &&
+                    o.Action == "Borrow" &&
+                    o.BorrowEndDate > currentDate &&
+                    o.BorrowEndDate <= fiveDaysFromNow &&
+                    o.IsReturned != 1)
+        .Join(_context.Books,
+            order => order.BookId,
+            book => book.BookId,
+            (order, book) => new
+            {
+                Title = book.Title,
+                EndDate = order.BorrowEndDate
+            })
+        .ToListAsync();
+
+    ViewBag.BooksNearingExpiration = booksNearingExpiration;
     ViewBag.UserBooks = userBooks;
     ViewBag.WaitingList = waitingList;
     ViewBag.TotalOrders = totalOrders;
@@ -363,7 +384,7 @@ public class UserController : Controller
         {
             await connection.OpenAsync();
             using (var command = new OracleCommand(
-                       "UPDATE PERSTIN.ORDERS SET ISREMOVED = 1 " +
+                       "UPDATE SHTILMAN.ORDERS SET ISREMOVED = 1 " +
                        "WHERE USERNAME = :Username AND BOOKID = :BookId", 
                        connection))
             {

@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     sortSelect.addEventListener('change', () => {
         currentFilters.sortBy = sortSelect.value;
         currentFilters.onlyDiscounted = (sortSelect.value === 'on_sale');
-        currentFilters.onlyBorrowable = (sortSelect.value === 'borrowable'); // Add this line
+        currentFilters.onlyBorrowable = (sortSelect.value === 'borrowable'); 
         filterBooks();
     });
 
@@ -240,33 +240,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageDiv = document.createElement('div');
         messageDiv.className = isSuccess ? 'success-message' : 'error-message';
         messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
 
-        const parentCard = element.closest('.sf-product-card__content');
-        if (parentCard) {
-            const actionsDiv = parentCard.querySelector('.sf-product-card__actions');
-            if (actionsDiv) {
-                actionsDiv.insertAdjacentElement('afterend', messageDiv);
-            }
-        }
+        // Show immediately
+        requestAnimationFrame(() => {
+            messageDiv.style.opacity = '1';
+        });
 
+        // Hide after 4 seconds
         setTimeout(() => {
-            if (messageDiv && messageDiv.parentNode) {
-                messageDiv.remove();
-            }
-        }, 3000);
-
-        const handleClickOutside = (e) => {
-            if (!messageDiv.contains(e.target) && !element.contains(e.target)) {
-                messageDiv.remove();
-                document.removeEventListener('click', handleClickOutside);
-            }
-        };
-
-        setTimeout(() => {
-            document.addEventListener('click', handleClickOutside);
-        }, 100);
+            messageDiv.style.opacity = '0';
+            setTimeout(() => messageDiv.remove(), 300);
+        }, 2000);
     }
-
     function setupActionButtonListeners() {
 
         const dialogHTML = `
@@ -461,7 +447,28 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.dataset.bookId;
                 try {
-                    console.log('Sending buy request for book ID:', bookId);
+                    const cartResponse = await fetch('/ShoppingCart/CheckCartStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bookId)
+                    });
+
+                    if (cartResponse.ok) {
+                        const cartResult = await cartResponse.json();
+                        if (cartResult.inCart) {
+                            showMessage(this, "This book is already in your shopping cart", false);
+                            return;
+                        }
+                    }
+
+                    // Then check auth
+                    const authResponse = await fetch('/Book/CheckAuthStatus');
+                    if (authResponse.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
                     const response = await fetch('/Book/BuyBook', {
                         method: 'POST',
                         headers: {
@@ -476,24 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     const result = await response.json();
-                    console.log('Server response:', result);
-
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = result.success ? 'success-message' : 'error-message';
-                    messageDiv.textContent = result.message;
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.zIndex = '9999';
-
-                    document.body.appendChild(messageDiv);
-
-                    setTimeout(() => {
-                        if (messageDiv && messageDiv.parentNode) {
-                            messageDiv.remove();
-                        }
-                    }, 3000);
+                    showMessage(this, result.message, result.success);
 
                     if (result.success) {
                         filterBooks();
@@ -510,7 +500,29 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', async function() {
                 const bookId = this.getAttribute('data-book-id');
                 try {
-                    console.log('Sending borrow request for book ID:', bookId);
+                    const cartResponse = await fetch('/ShoppingCart/CheckCartStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bookId)
+                    });
+
+                    if (cartResponse.ok) {
+                        const cartResult = await cartResponse.json();
+                        if (cartResult.inCart) {
+                            showMessage(this, "This book is already in your shopping cart", false);
+                            return;
+                        }
+                    }
+
+                    // Then check auth
+                    const authResponse = await fetch('/Book/CheckAuthStatus');
+                    if (authResponse.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
+                    
                     const response = await fetch('/Book/BorrowBook', {
                         method: 'POST',
                         headers: {
@@ -525,23 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     const result = await response.json();
-
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = result.success ? 'success-message' : 'error-message';
-                    messageDiv.textContent = result.message;
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.zIndex = '9999';
-
-                    document.body.appendChild(messageDiv);
-
-                    setTimeout(() => {
-                        if (messageDiv && messageDiv.parentNode) {
-                            messageDiv.remove();
-                        }
-                    }, 3000);
+                    showMessage(this, result.message, result.success);
 
                     if (result.success) {
                         filterBooks();

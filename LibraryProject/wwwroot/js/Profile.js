@@ -9,6 +9,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+/*Notification Message showing time and style*/
+document.addEventListener('DOMContentLoaded', function() {
+    var alert = document.getElementById('expiration-alert');
+    if (alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 1s ease';
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 1000);
+        }, 4000);  // Will start fading after 4 seconds
+    }
+});
 function deleteBook(bookId) {
     console.log('Sending bookId:', bookId); // Debug log
     if (confirm('Are you sure you want to remove this book from your library?')) {

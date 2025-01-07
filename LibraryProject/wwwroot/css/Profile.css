@@ -185,13 +185,16 @@
 }
 
 .review-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 15px;
 }
 
-.review-header h4 {
+.review-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.review-title h4 {
     margin: 0;
     color: #333;
     font-size: 1.1rem;
@@ -199,6 +202,12 @@
 
 .rating {
     color: #ffd700;
+    display: flex;
+    gap: 3px;
+}
+
+.rating i {
+    font-size: 0.9rem; /* Smaller stars */
 }
 
 .review-content {
@@ -435,6 +444,28 @@
     color: #666;
     font-size: 0.9em;
 }
+
+/* Notification message*/
+.notification-alert {
+    animation: slideDown 0.5s ease-out;
+    transition: transform 0.2s ease;
+}
+
+.notification-alert:hover {
+    transform: translateY(-2px);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {

@@ -1,4 +1,48 @@
 @model IEnumerable<dynamic>
+@{
+    var username = ViewBag.Username;
+}
+@* Section of Header website *@
+<div id="header">
+    <div class="container">
+        <nav>
+            <ul id="sideMenu">
+                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a asp-controller="User" asp-action="Profile">Profile</a></li>
+                <li><a asp-controller="Book" asp-action="Store">Store</a></li>
+                <li><a asp-controller="Book" asp-action="ViewBook" id="viewBookNavBtn">View Books</a></li>
+                @if (ViewBag.Role == 1)
+                {
+                    <li><a asp-controller="Book" asp-action="AddBook" id="addBookNavBtn">Add Books</a></li>
+                    <li><a asp-controller="User" asp-action="ManageUsers" id="addBookNavBtn">User Management</a></li>
+                }
+            </ul>
+            <div class="nav-icons">
+                @if (string.IsNullOrEmpty(username))
+                {
+                    <a asp-controller="User" asp-action="Login" class="icon-link">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                    <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                        <i class="fa-solid fa-heart"></i>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Wishlist" asp-action="Index" class="icon-link">
+                        <i class="fa-solid fa-heart"></i>
+                    </a>
+                    <a asp-controller="ShoppingCart" asp-action="Index" class="icon-link">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </a>
+                    <a asp-controller="User" asp-action="Logout" class="icon-link">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                }
+            </div>
+        </nav>
+    </div>
+</div>
 <div class="ordered-books-container">
     <div class="container">
         <h2 class="ordered-books-title">Your Orders</h2>
@@ -25,6 +69,9 @@
             </div>
         }
     </div>
+</div>
+<div class="CR">
+    <p>Copyright © Made by IlanShtilman and Ariel Prestin</p>
 </div>
 @section Styles {
     <link rel="stylesheet" href="~/css/ordered-books.css" />
