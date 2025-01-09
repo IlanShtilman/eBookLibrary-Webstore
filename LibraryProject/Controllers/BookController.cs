@@ -94,6 +94,24 @@ public class BookController : Controller
             .Where(b => b.BookId < id)
             .OrderByDescending(b => b.BookId)
             .FirstOrDefaultAsync();
+        var waitingList = await _context.WaitingList
+            .Where(w => w.BookId == id)
+            .OrderBy(w => w.Position)
+            .Join(_context.Users,
+                w => w.Username,
+                u => u.Username,
+                (w, u) => new
+                {
+                    WaitingListId = w.WaitingListId,
+                    Position = w.Position,
+                    Username = w.Username,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    JoinDate = w.JoinDate
+                })
+            .ToListAsync();
+
+        ViewBag.WaitingList = waitingList;
 
         ViewBag.NextBookId = nextBook?.BookId;
         ViewBag.PrevBookId = prevBook?.BookId;
@@ -375,6 +393,61 @@ public class BookController : Controller
             Console.WriteLine($"Error: {ex.Message}");
             return StatusCode(500, "An internal server error occurred.");
         }
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> AdminRemoveFromWaitingList([FromBody] RemoveWaitingListRequest request)
+    {
+        try 
+        {
+            string username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
+            {
+                return Json(new { success = false, message = "User not logged in" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (user.Role != UserRole.Admin)
+            {
+                return Json(new { success = false, message = "Admin access required" });
+            }
+
+            var entry = await _context.WaitingList.FindAsync(request.WaitingListId);
+            if (entry == null)
+            {
+                return Json(new { success = false, message = "Waiting list entry not found" });
+            }
+
+            // Store position before removing
+            int removedPosition = entry.Position;
+            int bookId = entry.BookId;
+
+            // Remove the entry
+            _context.WaitingList.Remove(entry);
+
+            // Update positions for remaining users
+            var remainingEntries = await _context.WaitingList
+                .Where(w => w.BookId == bookId && w.Position > removedPosition)
+                .ToListAsync();
+
+            foreach (var remainingEntry in remainingEntries)
+            {
+                remainingEntry.Position--;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Successfully removed from waiting list" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    public class RemoveWaitingListRequest
+    {
+        public int WaitingListId { get; set; }
+        public int BookId { get; set; }
     }
 
     [HttpGet]

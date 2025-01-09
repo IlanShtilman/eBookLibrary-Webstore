@@ -384,7 +384,7 @@ public class UserController : Controller
         {
             await connection.OpenAsync();
             using (var command = new OracleCommand(
-                       "UPDATE PERSTIN.ORDERS SET ISREMOVED = 1 " +
+                       "UPDATE SHTILMAN.ORDERS SET ISREMOVED = 1 " +
                        "WHERE USERNAME = :Username AND BOOKID = :BookId", 
                        connection))
             {

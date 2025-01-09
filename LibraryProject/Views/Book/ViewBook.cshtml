@@ -24,7 +24,9 @@
                               ? "/images/book-placeholder.jpg"
                               : (@Model.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                                   ? @Model.ImageUrl
-                                  : $"/images/Bookcovers/{@Model.ImageUrl}"))" alt="@Model.Title Cover" class="cover-image" />
+                                  : $"/images/Bookcovers/{@Model.ImageUrl}"))" 
+                     alt="@Model.Title Cover" 
+                     class="cover-image" />
             </div>
             
             <div class="book-details">
@@ -40,6 +42,7 @@
                 </div>
             </div>
         </div>
+
         <div class="reviews-section">
             <h3>Reviews</h3>
             @{
@@ -73,8 +76,51 @@
                 }
             }
         </div>
+        <div class="waiting-list-section">
+            <h2><i class="fas fa-clock"></i> Waiting List</h2>
+            @{
+                var waitingList = ViewBag.WaitingList as IEnumerable<dynamic>;
+                if (waitingList == null || !waitingList.Any())
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-hourglass"></i>
+                        <p>No waiting list for this book</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="waitlist-content">
+                        @foreach (var entry in waitingList)
+                        {
+                            <div class="waitlist-item">
+                                <div class="item-details">
+                                    <div class="queue-position">
+                                        <span class="position-number">#@entry.Position</span>
+                                        <span class="in-line">in line</span>
+                                    </div>
+                                    <div class="user-info">
+                                        <p class="waitlist-name">@entry.FirstName @entry.LastName</p>
+                                        <p class="join-date">Joined on @entry.JoinDate.ToString("MM/dd/yyyy")</p>
+                                    </div>
+                                </div>
+                                @if (ViewBag.Role == 1)
+                                {
+                                    <button type="button"
+                                            class="remove-btn"
+                                            onclick="removeFromWaitingList(@entry.WaitingListId, @Model.BookId)"
+                                            title="Remove from waiting list">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
     </div>
 </div>
+
 @if (ViewBag.Role == 1)
 {
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -82,7 +128,6 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
-                    
                 </div>
                 <div class="modal-body">
                     Are you sure you want to delete this book? This action cannot be undone and will also delete all associated reviews.
@@ -95,10 +140,45 @@
         </div>
     </div>
 }
+
 @section Styles {
     <link rel="stylesheet" href="~/css/viewbook.css" />
 }
 @section Scripts {
+    <script>
+        async function removeFromWaitingList(waitingListId, bookId) {
+            if (confirm('Are you sure you want to remove this user from the waiting list?')) {
+                try {
+                    const response = await fetch('/Book/AdminRemoveFromWaitingList', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            waitingListId: waitingListId,
+                            bookId: bookId
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to remove user: ' + result.message);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        alert('Failed to remove user from waiting list');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while removing user from waiting list');
+                }
+            }
+}
+    </script>
     @if (ViewBag.Role == 1)
     {
         <script type="text/javascript">
