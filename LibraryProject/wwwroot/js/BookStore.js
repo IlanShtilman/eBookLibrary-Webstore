@@ -154,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="sf-product-card__content">
                     <h5 class="sf-product-card__title">${book.title}</h5>
                     <p class="sf-product-card__author">by ${book.author}</p>
+                    <p class="sf-product-card__publisher">Publisher: ${book.publisher}</p>
                     <p class="sf-product-card__year">Published: ${book.publishYear}</p>
                     <p class="sf-product-card__age">Age: ${getAgeDisplay(book.ageRestriction)}</p>
                     <div class="sf-product-card__formats">
