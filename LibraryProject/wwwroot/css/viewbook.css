@@ -379,3 +379,53 @@
 }
 
 
+.admin-price-controls {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+.price-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.price-group:last-child {
+    margin-bottom: 0;
+}
+.price-input {
+    width: 100px;
+    padding: 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+.update-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.update-btn:hover {
+    background-color: #0056b3;
+}
+.remove-discount-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.remove-discount-btn:hover {
+    background-color: #c82333;
+}
+.discount-dates {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}

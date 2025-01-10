@@ -386,7 +386,7 @@ nav .fas {
     display: flex;
     gap: 1rem;
 }
-.buy-btn,
+.buy-btn, .buy-now-btn,
 .borrow-btn {
     flex: 1;
     padding: 0.8rem;
@@ -396,10 +396,10 @@ nav .fas {
     cursor: pointer;
     transition: all 0.3s ease;
 }
-.buy-btn {
+.buy-btn, .buy-now-btn {
     color: white;
 }
-.buy-btn:hover {
+.buy-btn, .buy-now-btn:hover {
     background: #0d5470;
 }
 .borrow-btn {
@@ -810,7 +810,7 @@ nav .fas {
     gap: 1rem;
 }
 
-.buy-btn, .borrow-btn {
+.buy-btn, .borrow-btn, .buy-now-btn {
     flex: 1;
     padding: 0.8rem;
     border: none;
@@ -820,12 +820,12 @@ nav .fas {
     transition: all 0.3s ease;
 }
 
-.buy-btn {
+.buy-btn, .buy-now-btn {
     background: #4682b4;
     color: white;
 }
 
-.buy-btn:hover {
+.buy-btn, .buy-now-btn:hover {
     background: #4682b4;
 }
 

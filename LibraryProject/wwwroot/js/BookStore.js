@@ -169,10 +169,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="sf-product-card__actions">
                         ${book.isAvailableToBuy
-                ? `<button class="buy-btn" 
-             data-book-id="${book.bookId}">
-             Buy
-           </button>`
+                ? `<div class="buy-buttons">
+                    <button class="buy-btn" 
+                        data-book-id="${book.bookId}">
+                        Buy
+                    </button>
+                    <button class="buy-now-btn" 
+                        data-book-id="${book.bookId}">
+                        Buy Now
+                    </button>
+                   </div>`
                 : ''}
                         ${book.isAvailableToBorrow && book.availableCopies > 0
                 ? `<button class="borrow-btn ${book.availableCopies <= 0 ? 'disabled' : ''}" 
@@ -455,6 +461,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+        //Buy now button handlers
+        document.querySelectorAll('.buy-now-btn:not(.disabled)').forEach(button => {
+            button.addEventListener('click', async function() {
+                const bookId = this.dataset.bookId;
+                try {
+                    const cartResponse = await fetch('/ShoppingCart/CheckCartStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bookId)
+                    });
+
+                    if (cartResponse.ok) {
+                        const cartResult = await cartResponse.json();
+                        if (cartResult.inCart) {
+                            window.location.href = '/ShoppingCart/Index';
+                            return;
+                        }
+                    }
+
+                    // Then check auth
+                    const authResponse = await fetch('/Book/CheckAuthStatus');
+                    if (authResponse.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
+                    const response = await fetch('/Book/BuyBook', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bookId)
+                    });
+
+                    if (response.status === 401) {
+                        handleAuthRequired(this);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.href = '/ShoppingCart/Index';
+                    } else {
+                        showMessage(this, result.message, result.success);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage(this, 'You must be logged in to buy a book.', false);
+                }
+            });
+        });
+        
+        
         // Buy button handlers
         document.querySelectorAll('.buy-btn:not(.disabled)').forEach(button => {
             button.addEventListener('click', async function() {

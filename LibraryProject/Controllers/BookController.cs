@@ -873,4 +873,63 @@ public class BookController : Controller
         return Ok("Successfully removed from waiting list");
     }
 
+    [HttpPost]
+    public async Task<IActionResult> UpdatePrice(int bookId, string type, double price)
+    {
+        var book = await _context.Books.FindAsync(bookId);
+        if (book == null)
+            return NotFound();
+
+        if (type == "buy")
+        {
+            if (price < book.BorrowPrice)
+                return BadRequest("Buy price cannot be lower than borrow price");
+            book.BuyPrice = price;
+        }
+        else if (type == "borrow")
+        {
+            if (price > book.BuyPrice)
+                return BadRequest("Borrow price cannot be higher than buy price");
+            book.BorrowPrice = price;
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SetDiscount(int bookId, double discountPrice)
+    {
+        var book = await _context.Books.FindAsync(bookId);
+        if (book == null)
+            return NotFound();
+
+        if (discountPrice > book.BuyPrice)
+            return BadRequest("Discount price cannot be higher than buy price");
+
+        book.DiscountedBuyPrice = discountPrice;
+        book.DiscountStartDate = DateTime.Now;
+        book.DiscountEndDate = DateTime.Now.AddDays(7);
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveDiscount(int bookId)
+    {
+        var book = await _context.Books.FindAsync(bookId);
+        if (book == null)
+            return NotFound();
+
+        book.DiscountedBuyPrice = null;
+        book.DiscountStartDate = null;
+        book.DiscountEndDate = null;
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    
+    
 }
