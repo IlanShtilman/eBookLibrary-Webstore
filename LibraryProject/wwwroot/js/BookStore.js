@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>`;
 
-        // Insert dialog if not exists
+        
         if (!document.getElementById('waitingListDialog')) {
             document.body.insertAdjacentHTML('beforeend', dialogHTML);
         }

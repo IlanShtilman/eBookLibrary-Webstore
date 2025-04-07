@@ -1,6 +1,7 @@
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using LibraryProject.Data;
 using LibraryProject.Data.Enums;
 using LibraryProject.Models;
@@ -41,6 +42,25 @@ public class UserController : Controller
         }
     }
 
+    private string HashPassword(string password)
+    {
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                builder.Append(bytes[i].ToString("x2"));
+            }
+            return builder.ToString();
+        }
+    }
+
+    private bool VerifyPassword(string password, string hashedPassword)
+    {
+        return HashPassword(password) == hashedPassword;
+    }
+
     public async Task<IActionResult> ChangePassword(string Email)
     {
         if (string.IsNullOrEmpty(Email))
@@ -59,7 +79,7 @@ public class UserController : Controller
         try
         {
             // Update user's password in database with encrypted version
-            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.Password = HashPassword(newPassword);
             user.IsPasswordChanged = 1;
             await _context.SaveChangesAsync();
             // Send email with new password
@@ -118,13 +138,13 @@ public class UserController : Controller
         }
 
         // Verify current password
-        if (!BCrypt.Net.BCrypt.Verify(CurrentPassword, user.Password))
+        if (!VerifyPassword(CurrentPassword, user.Password))
         {
             return Json(new { success = false, message = "Current password is incorrect." });
         }
 
         // Update password
-        user.Password = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+        user.Password = HashPassword(NewPassword);
         user.IsPasswordChanged = 0;
         await _context.SaveChangesAsync();
 
@@ -167,7 +187,7 @@ public class UserController : Controller
         {
             try
             {
-                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                user.Password = HashPassword(user.Password);
                 user.Role = UserRole.User;
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
@@ -196,7 +216,7 @@ public class UserController : Controller
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
+        if (user == null || !VerifyPassword(Password, user.Password))
         {
             ViewBag.Message = user == null ? "No user found with this email" : "Incorrect password";
             return View("Login");
@@ -451,6 +471,7 @@ public class UserController : Controller
         }
         return RedirectToAction("ManageUsers");
     }
+
     [HttpPost]
     public async Task<IActionResult> RemoveUser(string username)
     {
@@ -461,10 +482,8 @@ public class UserController : Controller
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "User removed successfully.";
         }
+
         return RedirectToAction("ManageUsers");
     }
-    
-    
-    
-    
+
 }

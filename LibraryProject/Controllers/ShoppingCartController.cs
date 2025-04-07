@@ -552,7 +552,7 @@ public class ShoppingCartController : Controller
                         using (var connection = new OracleConnection(_context.Database.GetConnectionString()))
                         {
                             await connection.OpenAsync();
-                            using (var command = new OracleCommand("SELECT PERSTIN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
+                            using (var command = new OracleCommand("SELECT SHTILMAN.ORDER_SEQ.NEXTVAL FROM DUAL", connection))
                             {
                                 nextOrderId = Convert.ToInt32(await command.ExecuteScalarAsync());
                             }
@@ -680,7 +680,6 @@ public class ShoppingCartController : Controller
         return new JsonResult("error");
     }
     // In your ShoppingCartController, modify the CompleteOrder method
-// Add this after successfully creating the order:
 
     private async Task UpdateWaitingList(string username, List<ShoppingCart> cartItems)
     {
